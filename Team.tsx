@@ -165,6 +165,42 @@ export default function Team() {
                     </div>
                     <div className="p-6 pt-2 flex flex-col flex-1">
                         <p className="text-gray-400 text-sm line-clamp-3 mb-4 flex-1">{member.bio}</p>
+                        
+                        {/* Social Links on Card */}
+                        <div className="flex gap-3 mb-4 pl-1" onClick={(e) => e.stopPropagation()}>
+                            {member.socialLinks?.linkedin && (
+                                <a 
+                                    href={member.socialLinks.linkedin} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-gray-500 hover:text-[#0077b5] transition-colors"
+                                    title="LinkedIn"
+                                >
+                                    <i className="fa-brands fa-linkedin text-lg"></i>
+                                </a>
+                            )}
+                            {member.socialLinks?.twitter && (
+                                <a 
+                                    href={member.socialLinks.twitter} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-gray-500 hover:text-[#1DA1F2] transition-colors"
+                                    title="Twitter"
+                                >
+                                    <i className="fa-brands fa-twitter text-lg"></i>
+                                </a>
+                            )}
+                            {member.socialLinks?.email && (
+                                <a 
+                                    href={`mailto:${member.socialLinks.email}`} 
+                                    className="text-gray-500 hover:text-brand-gold transition-colors"
+                                    title="Email"
+                                >
+                                    <i className="fa-solid fa-envelope text-lg"></i>
+                                </a>
+                            )}
+                        </div>
+
                         <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
                             <span className="text-xs text-gray-500 font-mono uppercase bg-white/5 px-2 py-1 rounded">{member.department}</span>
                             <span className="text-brand-gold text-sm hover:underline flex items-center gap-1">

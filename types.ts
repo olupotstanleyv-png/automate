@@ -428,7 +428,7 @@ export interface FAQItem {
   isPublished: boolean;
 }
 
-export type PageView = 'home' | 'shop' | 'services' | 'about' | 'contact' | 'faq' | 'admin' | 'cart' | 'wishlist' | 'checkout' | 'order-success' | 'team';
+export type PageView = 'home' | 'shop' | 'services' | 'about' | 'contact' | 'faq' | 'admin' | 'cart' | 'wishlist' | 'checkout' | 'order-success' | 'team' | 'blog';
 
 // --- SETTINGS TYPES ---
 

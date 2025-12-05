@@ -323,7 +323,7 @@ export default function Chatbot() {
     }
 
     // 7. ASSISTANT & FALLBACK (AI)
-    if (currentFlow === 'ASSISTANT' || currentFlow === 'MAIN') {
+    if (currentFlow === 'ASSISTANT' || currentFlow === 'AI_CHAT') {
       await runGeminiAI(text);
       setIsLoading(false);
     }

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { PageView } from './types';
 import { useCart, useWishlist, useSettings } from './store';
@@ -16,6 +17,7 @@ export default function Navbar({ currentPage, setPage, onSearch }: NavbarProps) 
   const { settings } = useSettings();
   const [searchValue, setSearchValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const wishlistCount = wishlist.length;
   const searchRef = useRef<HTMLDivElement>(null);
@@ -32,12 +34,19 @@ export default function Navbar({ currentPage, setPage, onSearch }: NavbarProps) 
     e.preventDefault();
     onSearch(searchValue);
     setIsFocused(false);
+    setIsMobileMenuOpen(false);
   };
 
   const handleSelectProduct = (productName: string) => {
     setSearchValue(productName);
     onSearch(productName);
     setIsFocused(false);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleNavClick = (page: PageView) => {
+      setPage(page);
+      setIsMobileMenuOpen(false);
   };
 
   // Close dropdown when clicking outside
@@ -60,7 +69,7 @@ export default function Navbar({ currentPage, setPage, onSearch }: NavbarProps) 
           {/* Logo */}
           <div 
             className="flex-shrink-0 flex items-center cursor-pointer" 
-            onClick={() => setPage('home')}
+            onClick={() => handleNavClick('home')}
           >
             {settings.logoUrl ? (
                 <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto mr-2 rounded" />
@@ -129,6 +138,7 @@ export default function Navbar({ currentPage, setPage, onSearch }: NavbarProps) 
               <button onClick={() => setPage('shop')} className={`text-sm font-medium hover:text-brand-gold transition-colors ${currentPage === 'shop' ? 'text-brand-gold' : 'text-gray-300'}`}>Shop</button>
               <button onClick={() => setPage('services')} className={`text-sm font-medium hover:text-brand-gold transition-colors ${currentPage === 'services' ? 'text-brand-gold' : 'text-gray-300'}`}>Services</button>
               <button onClick={() => setPage('team')} className={`text-sm font-medium hover:text-brand-gold transition-colors ${currentPage === 'team' ? 'text-brand-gold' : 'text-gray-300'}`}>Our Team</button>
+              <button onClick={() => setPage('blog')} className={`text-sm font-medium hover:text-brand-gold transition-colors ${currentPage === 'blog' ? 'text-brand-gold' : 'text-gray-300'}`}>Blog</button>
               <button onClick={() => setPage('about')} className={`text-sm font-medium hover:text-brand-gold transition-colors ${currentPage === 'about' ? 'text-brand-gold' : 'text-gray-300'}`}>About</button>
               <button onClick={() => setPage('faq')} className={`text-sm font-medium hover:text-brand-gold transition-colors ${currentPage === 'faq' ? 'text-brand-gold' : 'text-gray-300'}`}>FAQ</button>
             </div>
@@ -167,12 +177,46 @@ export default function Navbar({ currentPage, setPage, onSearch }: NavbarProps) 
             </button>
 
             {/* Mobile menu button */}
-            <button className="lg:hidden text-gray-300">
-              <i className="fa-solid fa-bars text-xl"></i>
+            <button 
+                className="lg:hidden text-gray-300 hover:text-white"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <i className={`fa-solid ${isMobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-xl`}></i>
             </button>
           </div>
         </div>
       </div>
+
+       {/* Mobile Menu Dropdown */}
+       {isMobileMenuOpen && (
+        <div className="lg:hidden bg-brand-surface border-b border-white/5 animate-fade-in-down absolute w-full left-0 z-40 shadow-2xl">
+            <div className="px-4 pt-2 pb-4 space-y-1">
+                {[
+                    { id: 'home', label: 'Home' },
+                    { id: 'shop', label: 'Shop' },
+                    { id: 'services', label: 'Services' },
+                    { id: 'team', label: 'Our Team' },
+                    { id: 'blog', label: 'Blog' },
+                    { id: 'about', label: 'About' },
+                    { id: 'faq', label: 'FAQ' },
+                    { id: 'contact', label: 'Contact' },
+                    { id: 'admin', label: 'Admin Console' }
+                ].map((item) => (
+                    <button
+                        key={item.id}
+                        onClick={() => handleNavClick(item.id as PageView)}
+                        className={`block w-full text-left px-3 py-3 rounded-md text-base font-medium transition-colors ${
+                            currentPage === item.id 
+                            ? 'bg-brand-gold/10 text-brand-gold' 
+                            : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+      )}
     </nav>
   );
 }

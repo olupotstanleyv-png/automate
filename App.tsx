@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Navbar from './Navbar';
 import Chatbot from './Chatbot';
@@ -12,6 +13,7 @@ import Contact from './Contact';
 import About from './About';
 import FAQ from './FAQ';
 import Team from './Team';
+import Blog from './Blog';
 import { PageView, Order } from './types';
 import { CartProvider, useCart, WishlistProvider, OrderProvider, SettingsProvider, ContactProvider, ServiceBookingProvider, useSettings, TeamProvider } from './store';
 
@@ -112,6 +114,7 @@ const MainContent = () => {
         {currentPage === 'shop' && <Shop searchQuery={searchQuery} />}
         {currentPage === 'services' && <Services setPage={setCurrentPage} />}
         {currentPage === 'team' && <Team />}
+        {currentPage === 'blog' && <Blog setPage={setCurrentPage} />}
         {currentPage === 'admin' && <Admin />}
         {currentPage === 'cart' && <CartPage setPage={setCurrentPage} />}
         {currentPage === 'checkout' && <Checkout setPage={setCurrentPage} setLastOrder={setLastOrder} />}

@@ -1,7 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { PRODUCTS, MOCK_FLEET } from './data';
+
+// TypeScript declaration to ensure build passes with Vite's define replacement
+declare const process: {
+  env: {
+    API_KEY: string;
+  }
+};
 
 // --- TYPES ---
 type FlowType = 'MAIN' | 'INVENTORY' | 'EMI' | 'TEST_DRIVE' | 'ASSISTANT' | 'SERVICE' | 'PAYMENT' | 'AGENT' | 'AI_CHAT';
@@ -336,8 +343,10 @@ export default function Chatbot() {
         addBotMessage("AI Service Unavailable. Please configure API_KEY.");
         return;
       }
-      const model = new GoogleGenerativeAI({process.env.API_KEY });
-    
+      
+      // Initialize the Generative AI client using the correct string parameter
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
       const systemPrompt = `You are the smart assistant for Car Automate Inc.
       Context: User is likely looking for a car, service, or parts.
       Inventory: ${JSON.stringify(PRODUCTS.map(p => ({ name: p.name, price: p.price, cat: p.category })))}
@@ -348,15 +357,18 @@ export default function Chatbot() {
       3. If they want to book, suggest typing "Menu" to use the booking system.
       `;
 
+      // Start chat session with updated configuration
       const chat = ai.chats.create({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         config: { systemInstruction: systemPrompt },
         history: [{ role: 'model', parts: [{ text: "Hello! I am the Car Automate assistant." }] }]
       });
 
-      const result = await chat.sendMessage({ message: userMsg });
-      addBotMessage(result.text);
+      // Send message
+      const response = await chat.sendMessage({ message: userMsg });
+      addBotMessage(response.text || "Sorry, I couldn't generate a response.");
     } catch (e) {
+      console.error(e);
       addBotMessage("I'm having trouble connecting to the AI. Please try the Menu options.", ["Main Menu"]);
     }
   };

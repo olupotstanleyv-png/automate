@@ -336,7 +336,8 @@ export default function Chatbot() {
         addBotMessage("AI Service Unavailable. Please configure API_KEY.");
         return;
       }
-      const model = new GoogleGenerativeAI(apiKey);
+      const model = new GoogleGenerativeAI({ apiKey: process.env.API_KEY });
+    
       const systemPrompt = `You are the smart assistant for Car Automate Inc.
       Context: User is likely looking for a car, service, or parts.
       Inventory: ${JSON.stringify(PRODUCTS.map(p => ({ name: p.name, price: p.price, cat: p.category })))}
@@ -348,7 +349,7 @@ export default function Chatbot() {
       `;
 
       const chat = ai.chats.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         config: { systemInstruction: systemPrompt },
         history: [{ role: 'model', parts: [{ text: "Hello! I am the Car Automate assistant." }] }]
       });

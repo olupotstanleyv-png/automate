@@ -336,7 +336,7 @@ export default function Chatbot() {
         addBotMessage("AI Service Unavailable. Please configure API_KEY.");
         return;
       }
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const model = new GoogleGenerativeAI(apiKey);
       const systemPrompt = `You are the smart assistant for Car Automate Inc.
       Context: User is likely looking for a car, service, or parts.
       Inventory: ${JSON.stringify(PRODUCTS.map(p => ({ name: p.name, price: p.price, cat: p.category })))}

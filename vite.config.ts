@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Correctly map process.env.API_KEY to the environment variable
+      // Correctly map process.env.API_KEY to the environment variable for client-side usage
       'process.env.API_KEY': JSON.stringify(env.API_KEY),
     },
   };

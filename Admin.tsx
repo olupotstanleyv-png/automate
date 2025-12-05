@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { 
   PRODUCTS, 
@@ -12,7 +13,9 @@ import {
   MOCK_SERVICE_RECORDS, 
   MOCK_POS_SESSIONS,
   MOCK_ACTIVITY_LOGS,
-  MOCK_SERVICE_PACKAGES
+  MOCK_SERVICE_PACKAGES,
+  MOCK_BLOG_POSTS,
+  DEFAULT_ROLES
 } from './data';
 import { 
   Product, 
@@ -31,12 +34,17 @@ import {
   WorkOrder,
   POSWorkflowStage,
   POSItem,
-  PaymentMethodType
+  PaymentMethodType,
+  BlogPost,
+  BlogStatus,
+  SystemRole,
+  StaffStatus,
+  Permission
 } from './types';
 import { useOrders, useSettings, useContact, useTeam } from './store';
 
 // --- TYPES ---
-type AdminTab = 'dashboard' | 'pos' | 'products' | 'vehicles' | 'bookings' | 'maintenance' | 'compliance' | 'orders' | 'customers' | 'staff' | 'financials' | 'notifications' | 'reports' | 'audit' | 'settings' | 'support' | 'team';
+type AdminTab = 'dashboard' | 'pos' | 'products' | 'vehicles' | 'bookings' | 'maintenance' | 'compliance' | 'orders' | 'customers' | 'staff' | 'financials' | 'notifications' | 'reports' | 'audit' | 'settings' | 'support' | 'team' | 'blog';
 
 interface SidebarItemProps {
   tab: AdminTab;
@@ -1095,6 +1103,243 @@ const ReportsView = () => (
       </div>
 );
 
+const BlogView = () => {
+    const [currentTab, setCurrentTab] = useState<'All' | 'Draft' | 'Review' | 'Published'>('All');
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentPost, setCurrentPost] = useState<BlogPost | null>(null);
+
+    const filteredPosts = MOCK_BLOG_POSTS.filter(p => currentTab === 'All' || p.status === currentTab);
+
+    const handleEdit = (post: BlogPost) => {
+        setCurrentPost(post);
+        setIsEditing(true);
+    };
+
+    const handleNew = () => {
+        setCurrentPost({
+            id: `blog-${Date.now()}`,
+            title: '',
+            slug: '',
+            content: '',
+            excerpt: '',
+            image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2070&auto=format&fit=crop',
+            author: 'Admin',
+            category: 'Technology',
+            tags: [],
+            status: 'Draft',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+        setIsEditing(true);
+    };
+
+    const handleSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        // In a real app, dispatch save action here
+        console.log("Saved Post:", currentPost);
+        setIsEditing(false);
+        setCurrentPost(null);
+    };
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-white">Blog Management</h2>
+                    <p className="text-gray-400 text-sm">Manage articles, SEO, and publishing workflow.</p>
+                </div>
+                <button onClick={handleNew} className="bg-brand-gold text-black font-bold py-2 px-4 rounded hover:bg-brand-gold-light flex items-center gap-2">
+                    <i className="fa-solid fa-pen-nib"></i> New Post
+                </button>
+            </div>
+
+            {/* Workflow Tabs */}
+            <div className="flex gap-2 border-b border-white/10 pb-1">
+                {['All', 'Draft', 'Review', 'Published'].map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setCurrentTab(tab as any)}
+                        className={`px-6 py-2 text-sm font-bold transition-all border-b-2 ${
+                            currentTab === tab 
+                            ? 'border-brand-gold text-brand-gold bg-white/5' 
+                            : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
+            {/* Post List */}
+            <div className="bg-brand-surface rounded-xl border border-white/5 overflow-hidden">
+                <table className="w-full text-left text-sm text-gray-400">
+                    <thead className="bg-brand-dark text-xs uppercase font-bold text-gray-500 border-b border-white/5">
+                        <tr>
+                            <th className="p-4">Title</th>
+                            <th className="p-4">Author</th>
+                            <th className="p-4">Category</th>
+                            <th className="p-4">Status</th>
+                            <th className="p-4">Date</th>
+                            <th className="p-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                        {filteredPosts.map(post => (
+                            <tr key={post.id} className="hover:bg-white/5 transition-colors group">
+                                <td className="p-4">
+                                    <div className="font-bold text-white mb-1 group-hover:text-brand-gold transition-colors">{post.title}</div>
+                                    <div className="text-xs text-gray-500 truncate max-w-xs">{post.slug}</div>
+                                </td>
+                                <td className="p-4">{post.author}</td>
+                                <td className="p-4">
+                                    <span className="bg-white/5 px-2 py-1 rounded text-xs border border-white/10">{post.category}</span>
+                                </td>
+                                <td className="p-4">
+                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                                        post.status === 'Published' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                                        post.status === 'Review' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                                        'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                                    }`}>
+                                        {post.status}
+                                    </span>
+                                </td>
+                                <td className="p-4 text-xs">{post.date || new Date(post.createdAt).toLocaleDateString()}</td>
+                                <td className="p-4 text-right">
+                                    <button onClick={() => handleEdit(post)} className="text-gray-400 hover:text-white mr-3"><i className="fa-solid fa-pen-to-square"></i></button>
+                                    <button className="text-gray-400 hover:text-red-500"><i className="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Edit Modal */}
+            {isEditing && currentPost && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-brand-surface w-full max-w-4xl rounded-xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <i className="fa-solid fa-pen-nib text-brand-gold"></i>
+                                {currentPost.id.startsWith('blog-') ? 'New Post' : 'Edit Post'}
+                            </h3>
+                            <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
+                        </div>
+                        
+                        <form onSubmit={handleSave} className="space-y-6">
+                            <div className="grid grid-cols-3 gap-6">
+                                <div className="col-span-2 space-y-4">
+                                    <div>
+                                        <label className="block text-xs text-gray-500 uppercase mb-1">Title</label>
+                                        <input 
+                                            type="text" 
+                                            value={currentPost.title} 
+                                            onChange={e => setCurrentPost({...currentPost, title: e.target.value})} 
+                                            className="w-full bg-brand-dark border border-white/10 rounded p-3 text-white focus:border-brand-gold focus:outline-none text-lg font-bold"
+                                            placeholder="Enter post title..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-500 uppercase mb-1">Content (Markdown/HTML)</label>
+                                        <textarea 
+                                            rows={12} 
+                                            value={currentPost.content} 
+                                            onChange={e => setCurrentPost({...currentPost, content: e.target.value})} 
+                                            className="w-full bg-brand-dark border border-white/10 rounded p-3 text-white focus:border-brand-gold focus:outline-none font-mono text-sm"
+                                            placeholder="# Start writing..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-500 uppercase mb-1">Excerpt</label>
+                                        <textarea 
+                                            rows={3} 
+                                            value={currentPost.excerpt} 
+                                            onChange={e => setCurrentPost({...currentPost, excerpt: e.target.value})} 
+                                            className="w-full bg-brand-dark border border-white/10 rounded p-3 text-white focus:border-brand-gold focus:outline-none text-sm"
+                                            placeholder="Short summary for preview cards..."
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    <div className="bg-brand-dark p-4 rounded border border-white/5">
+                                        <h4 className="text-white font-bold text-sm mb-3">Publishing</h4>
+                                        <div className="mb-4">
+                                            <label className="block text-xs text-gray-500 uppercase mb-1">Status</label>
+                                            <select 
+                                                value={currentPost.status} 
+                                                onChange={e => setCurrentPost({...currentPost, status: e.target.value as BlogStatus})} 
+                                                className="w-full bg-brand-surface border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none"
+                                            >
+                                                <option value="Draft">Draft</option>
+                                                <option value="Review">Review</option>
+                                                <option value="Published">Published</option>
+                                                <option value="Archived">Archived</option>
+                                            </select>
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="block text-xs text-gray-500 uppercase mb-1">Category</label>
+                                            <select 
+                                                value={currentPost.category} 
+                                                onChange={e => setCurrentPost({...currentPost, category: e.target.value})} 
+                                                className="w-full bg-brand-surface border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none"
+                                            >
+                                                <option>Technology</option>
+                                                <option>Maintenance</option>
+                                                <option>Performance</option>
+                                                <option>Customization</option>
+                                                <option>Safety</option>
+                                                <option>News</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-gray-500 uppercase mb-1">Author</label>
+                                            <input 
+                                                type="text" 
+                                                value={currentPost.author} 
+                                                onChange={e => setCurrentPost({...currentPost, author: e.target.value})} 
+                                                className="w-full bg-brand-surface border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-brand-dark p-4 rounded border border-white/5">
+                                        <h4 className="text-white font-bold text-sm mb-3">SEO Settings</h4>
+                                        <div className="mb-3">
+                                            <label className="block text-xs text-gray-500 uppercase mb-1">SEO Title</label>
+                                            <input 
+                                                type="text" 
+                                                value={currentPost.seoTitle || ''} 
+                                                onChange={e => setCurrentPost({...currentPost, seoTitle: e.target.value})} 
+                                                className="w-full bg-brand-surface border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none text-xs"
+                                                placeholder="Defaults to Title"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-gray-500 uppercase mb-1">Featured Image URL</label>
+                                            <input 
+                                                type="text" 
+                                                value={currentPost.image} 
+                                                onChange={e => setCurrentPost({...currentPost, image: e.target.value})} 
+                                                className="w-full bg-brand-surface border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none text-xs"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                                <button type="button" onClick={() => setIsEditing(false)} className="px-6 py-2 text-gray-400 hover:text-white font-bold transition-colors">Cancel</button>
+                                <button type="submit" className="px-8 py-2 bg-brand-gold text-black font-bold rounded hover:bg-brand-gold-light transition-colors shadow-lg">Save Post</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const TeamView = () => {
     const { teamMembers, addTeamMember, updateTeamMember, deleteTeamMember } = useTeam();
     const [isEditingTeam, setIsEditingTeam] = useState(false);
@@ -1243,7 +1488,13 @@ const TeamView = () => {
                      </div>
                      <div>
                          <label className="block text-xs text-gray-500 uppercase mb-1">Portfolio URL</label>
-                         <input type="text" value={currentTeamMember.portfolioLink || ''} onChange={e => setCurrentTeamMember({...currentTeamMember, portfolioLink: e.target.value})} className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" placeholder="https://..." />
+                         <input 
+                            type="text" 
+                            value={currentTeamMember.portfolioLink || ''} 
+                            onChange={e => setCurrentTeamMember({...currentTeamMember, portfolioLink: e.target.value})} 
+                            className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" 
+                            placeholder="https://..." 
+                         />
                      </div>
                 </div>
 
@@ -1319,10 +1570,14 @@ const TeamView = () => {
 
 const SettingsView = () => {
     const { settings, updateSettings } = useSettings();
-    const [activeTab, setActiveTab] = useState<'General' | 'Users' | 'Notifications' | 'Social Media' | 'Audit & Logs'>('General');
+    const [activeTab, setActiveTab] = useState<'General' | 'Users' | 'Notifications' | 'Social Media' | 'Audit & Logs' | 'Roles & Permissions'>('General');
     // Local state for staff management simulation since we don't have a specific backend or context for StaffMembers in this scope
     const [staffList, setStaffList] = useState<StaffMember[]>(MOCK_STAFF);
     const [auditFilter, setAuditFilter] = useState('All');
+    
+    // Role Management State
+    const [systemRoles, setSystemRoles] = useState<SystemRole[]>(DEFAULT_ROLES);
+    const [editingRole, setEditingRole] = useState<SystemRole | null>(null);
   
     const handleRoleUpdate = (id: string, newRole: UserRole) => {
       setStaffList(prev => prev.map(member => 
@@ -1330,9 +1585,9 @@ const SettingsView = () => {
       ));
     };
 
-    const handleStatusUpdate = (id: string, newStatus: 'Active' | 'Inactive') => {
+    const handleStatusUpdate = (id: string, newStatus: StaffStatus) => {
         setStaffList(prev => prev.map(member => 
-            member.id === id ? { ...member, status: newStatus } : member
+            member.id === id ? { ...member, status: newStatus as any } : member
         ));
       };
 
@@ -1354,6 +1609,17 @@ const SettingsView = () => {
         updateSettings({ socialAccounts: updatedAccounts });
     };
 
+    const togglePermission = (roleId: string, module: string, perm: Permission) => {
+        setSystemRoles(prev => prev.map(role => {
+            if (role.id !== roleId) return role;
+            const currentPerms = role.permissions[module] || [];
+            const newPerms = currentPerms.includes(perm) 
+                ? currentPerms.filter(p => p !== perm) 
+                : [...currentPerms, perm];
+            return { ...role, permissions: { ...role.permissions, [module]: newPerms } };
+        }));
+    };
+
     const filteredLogs = MOCK_ACTIVITY_LOGS.filter(log => {
         if (auditFilter === 'All') return true;
         if (auditFilter === 'Admin') return ['Manager', 'Admin'].includes(log.role);
@@ -1373,7 +1639,7 @@ const SettingsView = () => {
          </div>
          
          <div className="flex gap-2 border-b border-white/10 pb-1 overflow-x-auto">
-            {['General', 'Users', 'Notifications', 'Social Media', 'Audit & Logs'].map(tab => (
+            {['General', 'Users', 'Roles & Permissions', 'Notifications', 'Social Media', 'Audit & Logs'].map(tab => (
                 <button 
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
@@ -1418,8 +1684,13 @@ const SettingsView = () => {
          {activeTab === 'Users' && (
              <div className="bg-brand-surface p-8 rounded-xl border border-white/5">
                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-white font-bold text-lg border-l-4 border-brand-gold pl-3">User Role Management</h3>
-                    <button className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors"><i className="fa-solid fa-plus mr-1"></i> Invite User</button>
+                    <div>
+                        <h3 className="text-white font-bold text-lg border-l-4 border-brand-gold pl-3 mb-1">User Management</h3>
+                        <p className="text-gray-400 text-sm">Manage staff accounts and approval status.</p>
+                    </div>
+                    <button className="bg-brand-gold text-black font-bold py-2 px-4 rounded hover:bg-brand-gold-light flex items-center gap-2">
+                        <i className="fa-solid fa-user-plus"></i> Add User
+                    </button>
                  </div>
                  
                  <div className="overflow-x-auto rounded-lg border border-white/5">
@@ -1427,49 +1698,122 @@ const SettingsView = () => {
                          <thead className="text-xs uppercase bg-brand-dark text-gray-500">
                              <tr>
                                  <th className="p-4">Name</th>
-                                 <th className="p-4">Email</th>
                                  <th className="p-4">Role</th>
                                  <th className="p-4">Department</th>
                                  <th className="p-4">Status</th>
+                                 <th className="p-4 text-right">Actions</th>
                              </tr>
                          </thead>
                          <tbody className="divide-y divide-white/5 bg-brand-dark/20">
                              {staffList.map(member => (
                                  <tr key={member.id} className="hover:bg-white/5 transition-colors">
-                                     <td className="p-4">
-                                        <div className="font-bold text-white">{member.name}</div>
+                                     <td className="p-4 flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-brand-dark flex items-center justify-center text-xs font-bold text-brand-gold border border-white/10">
+                                            {member.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-white">{member.name}</div>
+                                            <div className="text-xs text-gray-500">{member.email}</div>
+                                        </div>
                                      </td>
-                                     <td className="p-4 font-mono text-xs">{member.email}</td>
                                      <td className="p-4">
                                          <select 
                                             value={member.role}
                                             onChange={(e) => handleRoleUpdate(member.id, e.target.value as UserRole)}
                                             className="bg-brand-black border border-white/10 rounded px-3 py-1.5 text-white text-xs focus:border-brand-gold outline-none w-36"
                                          >
-                                             <option value="Admin">Admin</option>
-                                             <option value="Manager">Manager</option>
-                                             <option value="Sales">Sales</option>
-                                             <option value="Service Advisor">Service Advisor</option>
-                                             <option value="Technician">Technician</option>
-                                             <option value="Driver">Driver</option>
-                                             <option value="Accountant">Accountant</option>
+                                             {systemRoles.map(r => (
+                                                 <option key={r.id} value={r.name}>{r.name}</option>
+                                             ))}
                                          </select>
                                      </td>
                                      <td className="p-4">{member.department}</td>
                                      <td className="p-4">
-                                         <button 
-                                            onClick={() => handleStatusUpdate(member.id, member.status === 'Active' ? 'Inactive' : 'Active')}
-                                            className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${member.status === 'Active' ? 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/20'} transition-all w-20 text-center`}
-                                         >
+                                         <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                                             member.status === 'Active' ? 'bg-green-500/10 text-green-500' : 
+                                             member.status === 'Inactive' ? 'bg-red-500/10 text-red-500' :
+                                             'bg-yellow-500/10 text-yellow-500'
+                                         }`}>
                                              {member.status}
-                                         </button>
+                                         </span>
+                                     </td>
+                                     <td className="p-4 text-right">
+                                         {member.status === 'Active' ? (
+                                             <button onClick={() => handleStatusUpdate(member.id, 'Inactive')} className="text-xs text-red-500 hover:underline">Deactivate</button>
+                                         ) : (
+                                             <button onClick={() => handleStatusUpdate(member.id, 'Active')} className="text-xs text-green-500 hover:underline">Activate</button>
+                                         )}
                                      </td>
                                  </tr>
                              ))}
                          </tbody>
                      </table>
                  </div>
-                 <p className="text-xs text-gray-500 mt-4"><i className="fa-solid fa-circle-info mr-1"></i> Admins have full access. Managers can access all Operations. Service Advisors are limited to Bookings and Maintenance.</p>
+             </div>
+         )}
+
+         {activeTab === 'Roles & Permissions' && (
+             <div className="bg-brand-surface p-8 rounded-xl border border-white/5 space-y-8">
+                 <div className="flex justify-between items-center">
+                    <div>
+                        <h3 className="text-white font-bold text-lg border-l-4 border-brand-gold pl-3 mb-1">Role Configuration</h3>
+                        <p className="text-gray-400 text-sm">Define granular access controls for each role.</p>
+                    </div>
+                    <button className="bg-white/10 text-white font-bold py-2 px-4 rounded hover:bg-white/20 flex items-center gap-2">
+                        <i className="fa-solid fa-plus"></i> New Role
+                    </button>
+                 </div>
+
+                 {/* Permission Matrix */}
+                 <div className="overflow-x-auto">
+                     <table className="w-full text-left text-sm text-gray-400 border-collapse">
+                         <thead>
+                             <tr>
+                                 <th className="p-4 bg-brand-dark text-white border-b border-white/10 sticky left-0 z-10 w-48">Module / Capability</th>
+                                 {systemRoles.map(role => (
+                                     <th key={role.id} className="p-4 text-center bg-brand-dark/50 border-b border-white/10 min-w-[100px] border-l border-white/5">
+                                         <div className="font-bold text-white">{role.name}</div>
+                                         <div className="text-[10px] font-normal text-gray-500 mt-1">{role.isSystem ? 'System' : 'Custom'}</div>
+                                     </th>
+                                 ))}
+                             </tr>
+                         </thead>
+                         <tbody className="divide-y divide-white/5">
+                             {['Dashboard', 'Orders', 'Customers', 'Inventory', 'Finance', 'Settings'].map(module => (
+                                 <React.Fragment key={module}>
+                                     <tr className="bg-brand-dark/30">
+                                         <td colSpan={systemRoles.length + 1} className="p-2 pl-4 text-xs font-bold text-brand-gold uppercase tracking-wider">{module}</td>
+                                     </tr>
+                                     {(['View', 'Edit', 'Create', 'Delete', 'Approve'] as Permission[]).map(perm => (
+                                         <tr key={`${module}-${perm}`} className="hover:bg-white/5 transition-colors">
+                                             <td className="p-3 pl-8 sticky left-0 bg-brand-surface border-r border-white/5 text-gray-300">
+                                                 {perm} {module}
+                                             </td>
+                                             {systemRoles.map(role => {
+                                                 const hasPerm = role.permissions[module]?.includes(perm);
+                                                 return (
+                                                     <td key={`${role.id}-${module}-${perm}`} className="p-3 text-center border-l border-white/5">
+                                                         <button 
+                                                            onClick={() => togglePermission(role.id, module, perm)}
+                                                            className={`w-5 h-5 rounded border flex items-center justify-center mx-auto transition-all ${
+                                                                hasPerm 
+                                                                ? 'bg-brand-gold border-brand-gold text-black' 
+                                                                : 'bg-transparent border-gray-600 hover:border-gray-400'
+                                                            }`}
+                                                            disabled={role.name === 'Admin'} // Admin always has access
+                                                         >
+                                                             {hasPerm && <i className="fa-solid fa-check text-xs"></i>}
+                                                         </button>
+                                                     </td>
+                                                 );
+                                             })}
+                                         </tr>
+                                     ))}
+                                 </React.Fragment>
+                             ))}
+                         </tbody>
+                     </table>
+                 </div>
              </div>
          )}
          
@@ -1669,6 +2013,7 @@ export default function Admin() {
       case 'pos': return <POSView />;
       case 'notifications': return <NotificationsView />;
       case 'reports': return <ReportsView />;
+      case 'blog': return <BlogView />;
       default:
         return (
             <div className="flex flex-col items-center justify-center h-[50vh] text-gray-500 animate-fade-in">
@@ -1733,6 +2078,7 @@ export default function Admin() {
                     <SidebarItem tab="team" icon="fa-people-group" label="Team Management" isActive={activeTab === 'team'} onClick={() => setActiveTab('team')} />
                     <SidebarItem tab="customers" icon="fa-users" label="Customers" isActive={activeTab === 'customers'} onClick={() => setActiveTab('customers')} />
                     <SidebarItem tab="support" icon="fa-headset" label="Support Tickets" isActive={activeTab === 'support'} onClick={() => setActiveTab('support')} />
+                    <SidebarItem tab="blog" icon="fa-pen-to-square" label="Blog Posts" isActive={activeTab === 'blog'} onClick={() => setActiveTab('blog')} />
                  </div>
                )}
             </div>

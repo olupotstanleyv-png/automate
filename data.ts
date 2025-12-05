@@ -1,4 +1,5 @@
-import { Product, Vehicle, Customer, Booking, ServiceRecord, StaffMember, ActivityLog, Transaction, NotificationLog, AutomationRule, Order, POSSession, StaffTask, SupportTicket, Testimonial, Promotion, Feature, ServiceBooking, ServiceType, Milestone, AboutTeamMember, Award, FAQItem, TikTokPost, SocialAnalytics, TwitterTweet, PublicTeamMember, ServicePackage } from './types';
+
+import { Product, Vehicle, Customer, Booking, ServiceRecord, StaffMember, ActivityLog, Transaction, NotificationLog, AutomationRule, Order, POSSession, StaffTask, SupportTicket, Testimonial, Promotion, Feature, ServiceBooking, ServiceType, Milestone, AboutTeamMember, Award, FAQItem, TikTokPost, SocialAnalytics, TwitterTweet, PublicTeamMember, ServicePackage, BlogPost, SystemRole } from './types';
 
 export const PRODUCTS: Product[] = [
   {
@@ -128,9 +129,9 @@ export const MOCK_FLEET: Vehicle[] = [
       serviceHistory: null
     },
     compliance: [
-      { id: 'cd4', type: 'Insurance', number: 'INS-112233', expiryDate: '2024-05-10' }, // Expiring soon or expired
+      { id: 'cd4', type: 'Insurance', number: 'INS-112233', expiryDate: '2024-05-10' }, 
       { id: 'cd5', type: 'Registration', number: 'REG-WP0AA', expiryDate: '2026-11-20' },
-      { id: 'cd6', type: 'Pollution', number: 'PUC-2023-11', expiryDate: '2023-11-20' } // Expired
+      { id: 'cd6', type: 'Pollution', number: 'PUC-2023-11', expiryDate: '2023-11-20' }
     ]
   },
   {
@@ -239,6 +240,47 @@ export const MOCK_BOOKINGS: Booking[] = [
     totalAmount: 600,
     status: 'Pending'
   }
+];
+
+export const MOCK_ORDERS: Order[] = [
+    {
+        id: 'ORD-1001',
+        customerName: 'Alice Smith',
+        customerEmail: 'alice.smith@example.com',
+        customerPhone: '+1 (555) 012-3456',
+        items: [{ ...PRODUCTS[0], quantity: 1 }],
+        subtotal: 2500,
+        tax: 250,
+        deliveryFee: 25,
+        serviceCharge: 0,
+        total: 2775,
+        deliveryMethod: 'Shipping',
+        shippingAddress: { street: '42 Tech Blvd', city: 'San Francisco', state: 'CA', zip: '94000' },
+        paymentMethod: 'Credit Card',
+        paymentStatus: 'Paid',
+        status: 'Delivered',
+        createdAt: '2024-05-15T10:00:00Z',
+        updatedAt: '2024-05-18T14:00:00Z'
+    },
+    {
+        id: 'ORD-1002',
+        customerName: 'Bob Jones',
+        customerEmail: 'bob.jones@example.com',
+        customerPhone: '+1 (555) 098-7654',
+        items: [{ ...PRODUCTS[1], quantity: 2 }],
+        subtotal: 900,
+        tax: 90,
+        deliveryFee: 0,
+        serviceCharge: 0,
+        total: 990,
+        deliveryMethod: 'Pickup',
+        pickupLocation: 'Silicon Valley Main Hub',
+        paymentMethod: 'PayPal',
+        paymentStatus: 'Paid',
+        status: 'Ready',
+        createdAt: '2024-05-24T09:30:00Z',
+        updatedAt: '2024-05-24T12:00:00Z'
+    }
 ];
 
 export const MOCK_SERVICE_RECORDS: ServiceRecord[] = [
@@ -396,258 +438,59 @@ export const MOCK_NOTIFICATIONS: NotificationLog[] = [
 
 export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
   { id: 'r1', name: 'Booking Confirmation', description: 'Send confirmation when booking is approved.', channels: ['Email', 'SMS'], trigger: 'Booking Created', isActive: true },
-  { id: 'r2', name: 'Payment Receipt', description: 'Send receipt automatically after successful payment.', channels: ['Email'], trigger: 'Payment Received', isActive: true },
-  { id: 'r3', name: 'Service Reminder', description: 'Notify customer 7 days before scheduled service.', channels: ['WhatsApp', 'Email'], trigger: 'Service Due', isActive: true },
-  { id: 'r4', name: 'Document Expiry Alert', description: 'Alert admin and vehicle owner when docs expire.', channels: ['Email', 'SMS'], trigger: 'Document Expiry', isActive: true },
-  { id: 'r5', name: 'Inactive Customer Follow-up', description: 'Re-engagement message after 30 days inactivity.', channels: ['Email'], trigger: '30 Days Inactive', isActive: false },
-];
-
-export const MOCK_ORDERS: Order[] = [
-  {
-    id: 'ord-001',
-    customerName: 'Alice Smith',
-    customerEmail: 'alice.smith@example.com',
-    customerPhone: '+1 (555) 012-3456',
-    items: [{...PRODUCTS[1], quantity: 2}],
-    subtotal: 900,
-    tax: 90,
-    deliveryFee: 15,
-    serviceCharge: 0,
-    total: 1005,
-    deliveryMethod: 'Shipping',
-    shippingAddress: { street: '42 Tech Blvd', city: 'San Francisco', state: 'CA', zip: '94107' },
-    paymentMethod: 'Credit Card',
-    paymentStatus: 'Paid',
-    status: 'Shipped',
-    createdAt: '2024-05-25T10:00:00',
-    updatedAt: '2024-05-25T14:30:00',
-    trackingNumber: 'TRK-99887766'
-  },
-  {
-    id: 'ord-002',
-    customerName: 'Bob Jones',
-    customerEmail: 'bob.jones@example.com',
-    customerPhone: '+1 (555) 098-7654',
-    items: [{...PRODUCTS[2], quantity: 1}],
-    subtotal: 300,
-    tax: 30,
-    deliveryFee: 0,
-    serviceCharge: 0,
-    total: 330,
-    deliveryMethod: 'Pickup',
-    pickupLocation: 'Silicon Valley Main Hub',
-    pickupTime: '2024-05-26T10:00:00',
-    paymentMethod: 'PayOnPickup',
-    paymentStatus: 'Pending',
-    status: 'Confirmed',
-    createdAt: '2024-05-25T11:15:00',
-    updatedAt: '2024-05-25T11:15:00'
-  },
-  {
-    id: 'ord-003',
-    customerName: 'Charlie Day',
-    customerEmail: 'charlie@paddys.com',
-    customerPhone: '+1 (555) 777-9999',
-    items: [{...PRODUCTS[5], quantity: 1}],
-    subtotal: 150,
-    tax: 15,
-    deliveryFee: 0,
-    serviceCharge: 10,
-    total: 175,
-    deliveryMethod: 'DineIn',
-    tableNumber: 'Table 5',
-    paymentMethod: 'UPI',
-    paymentStatus: 'Paid',
-    status: 'Served',
-    createdAt: '2024-05-24T18:00:00',
-    updatedAt: '2024-05-24T18:45:00'
-  }
+  { id: 'r2', name: 'Payment Receipt', description: 'Send receipt on successful payment.', channels: ['Email'], trigger: 'Payment Received', isActive: true }
 ];
 
 export const MOCK_POS_SESSIONS: POSSession[] = [
-    { id: 'sess-1', staffId: 's1', startTime: '2024-05-26T08:00:00', startCash: 500, totalSales: 2450, status: 'Open' }
-];
-
-export const MOCK_TICKETS: SupportTicket[] = [
-  {
-    id: 'TKT-1001',
-    customerName: 'Alice Smith',
-    email: 'alice.smith@example.com',
-    subject: 'Order Delay',
-    message: 'My order #ord-001 is pending for 3 days. When will it ship?',
-    status: 'Open',
-    priority: 'High',
-    category: 'Support',
-    createdAt: '2024-05-26T09:00:00',
-    replies: []
-  },
-  {
-    id: 'TKT-1002',
-    customerName: 'Bob Jones',
-    email: 'bob.jones@example.com',
-    subject: 'Product Inquiry',
-    message: 'Does the AutoPilot Kit V2 support 2020 models?',
-    status: 'In Progress',
-    priority: 'Medium',
-    category: 'Inquiry',
-    createdAt: '2024-05-25T14:30:00',
-    replies: [
-        { id: 'r1', sender: 'Staff', message: 'Hello Bob, checking compatibility now.', timestamp: '2024-05-25T15:00:00' }
-    ]
-  }
-];
-
-export const TESTIMONIALS: Testimonial[] = [
-  { id: 't1', name: 'John D.', role: 'Car Enthusiast', text: 'The autopilot kit completely transformed my driving experience. Installation was smooth!', rating: 5 },
-  { id: 't2', name: 'Sarah L.', role: 'Daily Commuter', text: 'Booked a service online and they picked up my car within the hour. Amazing convenience.', rating: 5 },
-  { id: 't3', name: 'Mike R.', role: 'Tech Reviewer', text: 'Top notch parts and the AI dash assistant is a game changer.', rating: 4 }
-];
-
-export const PROMOTIONS: Promotion[] = [
-  { id: 'p1', title: 'Summer Automation Sale', description: 'Get 20% off all AI kits', code: 'AUTO20', discount: '20%', expiry: 'Limited Time', image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2070&auto=format&fit=crop' },
-  { id: 'p2', title: 'Free Diagnostics', description: 'Book any repair service and get a free system check.', code: 'FREEDIAG', discount: 'Free', expiry: 'This Week', image: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=2070&auto=format&fit=crop' }
-];
-
-export const FEATURES: Feature[] = [
-  { icon: 'fa-rocket', title: 'Fast Service', description: 'Same-day diagnostics and quick turnaround times.' },
-  { icon: 'fa-user-shield', title: 'Trusted Staff', description: 'Certified experts with years of automotive experience.' },
-  { icon: 'fa-tags', title: 'Best Prices', description: 'Competitive pricing on all parts and labor.' },
-  { icon: 'fa-headset', title: '24/7 Support', description: 'Always here to help with your vehicle needs.' }
-];
-
-export const MOCK_SERVICE_BOOKINGS: ServiceBooking[] = [
-  {
-    id: 'SVC-101',
-    customerName: 'Alice Smith',
-    customerEmail: 'alice@example.com',
-    customerPhone: '+1 555-0123',
-    vehicle: { make: 'Tesla', model: 'Model 3', year: 2022 },
-    serviceType: ServiceType.Custom,
-    description: 'Install ambient lighting kit.',
-    date: '2024-06-15',
-    timeSlot: '10:00 AM',
-    deliveryMethod: 'Drop-off',
-    estimatedCost: 300,
-    status: 'Confirmed',
-    createdAt: '2024-06-01'
-  }
-];
-
-// --- ABOUT PAGE MOCK DATA ---
-export const ABOUT_MILESTONES: Milestone[] = [
-  { year: '2020', title: 'Founded', description: 'Started as a small garage focusing on EV modifications.' },
-  { year: '2022', title: 'First AI Product', description: 'Launched the AutoPilot V1 kit, revolutionizing aftermarket automation.' },
-  { year: '2023', title: 'Expansion', description: 'Opened 3 new service hubs across the West Coast.' },
-  { year: '2024', title: 'Global Recognition', description: 'Awarded "Top AutoTech Innovator" and served 10,000+ customers.' }
-];
-
-export const ABOUT_TEAM: AboutTeamMember[] = [
-  { id: 'tm1', name: 'Elena Rodriguez', role: 'CEO & Founder', bio: 'Former robotics engineer with a passion for autonomous driving systems.', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop' },
-  { id: 'tm2', name: 'David Chen', role: 'Head of Engineering', bio: 'Expert in embedded systems and AI, leading our R&D department.', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1000&auto=format&fit=crop' },
-  { id: 'tm3', name: 'Sarah Jones', role: 'Customer Experience', bio: 'Ensuring every client interaction is smooth, transparent, and helpful.', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1000&auto=format&fit=crop' }
-];
-
-export const ABOUT_AWARDS: Award[] = [
-  { id: 'aw1', title: 'AutoTech Innovator 2024', issuer: 'Tech Weekly', year: '2024', icon: 'fa-trophy' },
-  { id: 'aw2', title: 'Best EV Service Center', issuer: 'Auto Review', year: '2023', icon: 'fa-star' },
-  { id: 'aw3', title: 'Green Business Cert', issuer: 'EcoAlliance', year: '2022', icon: 'fa-leaf' }
-];
-
-// --- FAQ MOCK DATA ---
-export const MOCK_FAQS: FAQItem[] = [
-  { id: 'f1', question: 'How do I track my order?', answer: 'You can track your order status in real-time from the "My Account" section or by using the tracking number sent to your email.', category: 'Orders', helpfulCount: 15, notHelpfulCount: 1, isPublished: true },
-  { id: 'f2', question: 'Do you offer international shipping?', answer: 'Yes, we ship globally! Shipping costs and times vary depending on the destination. You can see the estimated cost at checkout.', category: 'Shipping', helpfulCount: 32, notHelpfulCount: 2, isPublished: true },
-  { id: 'f3', question: 'What is your return policy?', answer: 'We offer a 30-day return policy for unused items in original packaging. Custom automation kits may have specific return conditions.', category: 'Returns', helpfulCount: 8, notHelpfulCount: 0, isPublished: true },
-  { id: 'f4', question: 'How do I book a car service?', answer: 'Simply navigate to the "Services" page, select your desired service, and choose a convenient time slot.', category: 'Services', helpfulCount: 22, notHelpfulCount: 5, isPublished: true },
-  { id: 'f5', question: 'Are your technicians certified?', answer: 'Absolutely. All our technicians undergo rigorous training and are certified to handle both mechanical repairs and software diagnostics.', category: 'General', helpfulCount: 19, notHelpfulCount: 0, isPublished: true },
-  { id: 'f6', question: 'Can I pay with Mobile Money?', answer: 'Yes, we accept major Mobile Money providers including MTN, Airtel, M-Pesa, and more.', category: 'Payment', helpfulCount: 45, notHelpfulCount: 3, isPublished: true }
-];
-
-// --- TIKTOK & SOCIAL MOCK DATA ---
-
-export const MOCK_TIKTOK_POSTS: TikTokPost[] = [
-  {
-    id: 'tt1',
-    title: 'Autopilot Demo',
-    caption: 'Hands-free driving on the highway! 🚗💨 #Tesla #Autopilot #FutureTech',
-    hashtags: ['#Tesla', '#Autopilot', '#FutureTech', '#CarAutomate'],
-    status: 'Posted',
-    assignedTo: 'Mike Ross',
-    scheduledDate: '2024-05-20',
-    analytics: { views: 15400, likes: 2300, shares: 450, comments: 120, watchTime: '18s avg' },
-    createdAt: '2024-05-18'
-  },
-  {
-    id: 'tt2',
-    title: 'Workshop Tour',
-    caption: 'Behind the scenes at our Silicon Valley hub. Check out the new diagnostic bots! 🤖',
-    hashtags: ['#Workshop', '#MechanicLife', '#Tech'],
-    status: 'Scheduled',
-    assignedTo: 'Sarah Connor',
-    scheduledDate: '2024-05-28',
-    createdAt: '2024-05-24'
-  },
-  {
-    id: 'tt3',
-    title: 'Customer Reaction',
-    caption: 'Wait for the surprise at the end when she sees her new rims! 🔥',
-    hashtags: ['#CarMods', '#Reaction', '#HappyCustomer'],
-    status: 'Review',
-    assignedTo: 'John Doe',
-    createdAt: '2024-05-25'
-  },
-  {
-    id: 'tt4',
-    title: '5 Maintenance Tips',
-    caption: 'Top 5 things you need to check before a road trip.',
-    hashtags: ['#CarTips', '#Maintenance', '#RoadTrip'],
-    status: 'Idea',
-    assignedTo: 'Mike Ross',
-    createdAt: '2024-05-26'
-  }
-];
-
-export const MOCK_TWITTER_TWEETS: TwitterTweet[] = [
-  {
-    id: 'tw1',
-    content: 'Excited to announce our new partnership with Tesla! 🚗⚡ Expect faster parts delivery and exclusive upgrades. #Tesla #Partnership #CarAutomate',
-    status: 'Posted',
-    assignedTo: 'John Doe',
-    isThread: false,
-    analytics: { impressions: 12500, likes: 450, retweets: 120, replies: 35, clicks: 200 },
-    createdAt: '2024-05-25'
-  },
-  {
-    id: 'tw2',
-    content: 'Which feature do you value most in a car?\n\n1. Speed 🏎️\n2. Safety 🛡️\n3. Tech 🤖\n4. Comfort 🛋️\n\nVote below! 👇',
-    status: 'Scheduled',
-    assignedTo: 'Mike Ross',
-    isThread: false,
-    scheduledDate: '2024-05-30',
-    createdAt: '2024-05-26'
-  },
-  {
-    id: 'tw3',
-    content: 'Thread: 5 Signs your EV battery needs attention. 🧵👇',
-    status: 'Draft',
-    assignedTo: 'Sarah Connor',
-    isThread: true,
-    createdAt: '2024-05-26'
-  }
-];
-
-export const MOCK_SOCIAL_ANALYTICS: SocialAnalytics[] = [
-  { platform: 'TikTok', followers: 12500, growth: 15, totalViews: 450000, engagementRate: 8.5 },
-  { platform: 'Instagram', followers: 8200, growth: 5, totalViews: 120000, engagementRate: 4.2 },
-  { platform: 'YouTube', followers: 3500, growth: 2, totalViews: 85000, engagementRate: 3.1 },
-  { platform: 'Facebook', followers: 5000, growth: 0.5, totalViews: 20000, engagementRate: 1.5 },
-  { platform: 'Twitter', followers: 6200, growth: 3.5, totalViews: 150000, engagementRate: 5.8 }
+    { id: 'sess-1', staffId: 's2', startTime: '2024-05-25T08:00:00', startCash: 200, totalSales: 1450, status: 'Open' }
 ];
 
 export const MOCK_SERVICE_PACKAGES: ServicePackage[] = [
-    { id: 'sp1', name: 'Express Oil Change', price: 89.99, description: 'Synthetic oil, filter replacement, and 20-point inspection.', includes: ['Oil Filter', '5 Quarts Oil', 'Disposal Fee'], laborCode: 'L-101' },
-    { id: 'sp2', name: 'Full Automation Diagnostic', price: 149.99, description: 'Complete sensor calibration and firmware check.', includes: ['Sensor Calibration', 'ECU Scan', 'Report'], laborCode: 'L-305' },
-    { id: 'sp3', name: 'Brake Service (Front)', price: 299.99, description: 'Replace front pads and resurface rotors.', includes: ['Ceramic Pads', 'Hardware Kit', 'Fluid Top-off'], laborCode: 'L-202' },
-    { id: 'sp4', name: 'Tire Rotation & Balance', price: 49.99, description: 'Extend tire life with precision balancing.', includes: ['Weights', 'TPMS Reset'], laborCode: 'L-105' },
-    { id: 'sp5', name: 'Detailing Package', price: 199.99, description: 'Interior deep clean and exterior wax.', includes: ['Wash', 'Wax', 'Vacuum', 'Leather Condition'], laborCode: 'L-401' },
+    { id: 'pkg1', name: 'Basic Service', price: 199, description: 'Oil change and filter', includes: ['Oil Change', 'Filter Replacement'], laborCode: 'L-BSC' },
+    { id: 'pkg2', name: 'Full Inspection', price: 299, description: 'Comprehensive check', includes: ['Brake Check', 'Tire Rotation', 'Fluids'], laborCode: 'L-FULL' },
+    { id: 'pkg3', name: 'Brake Service', price: 450, description: 'Pad and rotor replacement', includes: ['Front Pads', 'Rear Pads', 'Rotors'], laborCode: 'L-BRK' }
+];
+
+export const MOCK_TICKETS: SupportTicket[] = [
+    { id: 't1', customerName: 'Bob Jones', email: 'bob@example.com', subject: 'Shipping Delay', message: 'Order is late.', status: 'Open', priority: 'High', category: 'Inquiry', createdAt: '2024-05-22', replies: [] }
+];
+
+export const MOCK_SERVICE_BOOKINGS: ServiceBooking[] = [
+    { id: 'sb1', customerName: 'Alice Smith', customerEmail: 'alice@example.com', customerPhone: '555-0123', vehicle: { make: 'Tesla', model: 'Model 3', year: 2022 }, serviceType: ServiceType.Maintenance, date: '2024-06-01', timeSlot: '10:00 AM', deliveryMethod: 'Drop-off', estimatedCost: 200, status: 'Confirmed', createdAt: '2024-05-20' }
+];
+
+export const MOCK_BLOG_POSTS: BlogPost[] = [
+    { id: 'b1', title: "The Future of Autonomous Driving", slug: "future-autonomous", excerpt: "How AI is reshaping the automotive industry.", content: "Full content here...", image: "https://images.unsplash.com/photo-1485291571150-772bcfc10da5?q=80&w=2100&auto=format&fit=crop", date: "May 25, 2024", category: "Technology", author: "Elena Rodriguez", tags: ["AI", "Future"], status: "Published", createdAt: "2024-05-25", updatedAt: "2024-05-25" },
+    { id: 'b2', title: "Top 5 EV Maintenance Tips", slug: "ev-tips", excerpt: "Essential maintenance tips for EVs.", content: "Content...", image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=2072&auto=format&fit=crop", date: "May 20, 2024", category: "Maintenance", author: "Marcus Johnson", tags: ["EV", "Maintenance"], status: "Published", createdAt: "2024-05-20", updatedAt: "2024-05-20" }
+];
+
+export const DEFAULT_ROLES: SystemRole[] = [
+  { id: 'role_admin', name: 'Admin', description: 'Full system access', permissions: { 'Dashboard': ['View', 'Edit', 'Create', 'Delete', 'Approve'], 'Orders': ['View', 'Edit', 'Create', 'Delete', 'Approve'], 'Inventory': ['View', 'Edit', 'Create', 'Delete', 'Approve'], 'Finance': ['View', 'Edit', 'Create', 'Delete', 'Approve'], 'Settings': ['View', 'Edit', 'Create', 'Delete', 'Approve'], 'Customers': ['View', 'Edit', 'Create', 'Delete', 'Approve'] }, isSystem: true },
+  { id: 'role_manager', name: 'Manager', description: 'Operational management', permissions: { 'Dashboard': ['View'], 'Orders': ['View', 'Edit', 'Approve'], 'Inventory': ['View', 'Edit', 'Create'] }, isSystem: false },
+  { id: 'role_sales', name: 'Sales', description: 'Sales and CRM access', permissions: { 'Dashboard': ['View'], 'Orders': ['View', 'Create'], 'Customers': ['View', 'Edit'] }, isSystem: false },
+  { id: 'role_service', name: 'Service Advisor', description: 'Service bookings and maintenance', permissions: { 'Dashboard': ['View'], 'Bookings': ['View', 'Edit', 'Approve'] }, isSystem: false },
+  { id: 'role_tech', name: 'Technician', description: 'Work orders and status updates', permissions: { 'Maintenance': ['View', 'Edit'] }, isSystem: false }
+];
+
+export const MOCK_FAQS: FAQItem[] = [
+    { id: 'f1', question: 'Do you offer international shipping?', answer: 'Yes, we ship globally.', category: 'Shipping', helpfulCount: 10, notHelpfulCount: 0, isPublished: true },
+    { id: 'f2', question: 'What is the warranty on parts?', answer: 'All parts come with a 2-year warranty.', category: 'Warranty', helpfulCount: 25, notHelpfulCount: 1, isPublished: true },
+    { id: 'f3', question: 'Can I track my order?', answer: 'Yes, tracking is provided via email.', category: 'Orders', helpfulCount: 15, notHelpfulCount: 0, isPublished: true }
+];
+
+export const ABOUT_MILESTONES: Milestone[] = [
+    { year: '2020', title: 'Founded', description: 'Car Automate Inc was born in Silicon Valley.' },
+    { year: '2022', title: 'Global Expansion', description: 'Opened offices in Europe and Asia.' },
+    { year: '2024', title: 'AI Integration', description: 'Launched proprietary AI diagnostic tools.' }
+];
+
+export const ABOUT_TEAM: AboutTeamMember[] = [
+    { id: 't1', name: 'Elena Rodriguez', role: 'CEO', bio: 'Visionary leader with 15 years in auto tech.', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop' },
+    { id: 't2', name: 'David Chen', role: 'CTO', bio: 'Expert in AI and embedded systems.', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1000&auto=format&fit=crop' },
+    { id: 't3', name: 'Sarah Jones', role: 'COO', bio: 'Operations wizard insuring smooth delivery.', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1000&auto=format&fit=crop' }
+];
+
+export const ABOUT_AWARDS: Award[] = [
+    { id: 'a1', title: 'Best Auto Tech Startup', issuer: 'TechCrunch', year: '2022', icon: 'fa-trophy' },
+    { id: 'a2', title: 'Innovation Award', issuer: 'CES', year: '2023', icon: 'fa-lightbulb' }
 ];

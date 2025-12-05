@@ -1,5 +1,6 @@
 
 
+
 export interface Product {
   id: string;
   name: string;
@@ -151,7 +152,7 @@ export interface PublicTeamMember {
   isFeatured: boolean; // For spotlight
   joinDate: string;
   
-  // Refactored to include optional years of experience
+  // Optional professional details
   yearsOfExperience?: number;
   specializations?: string[];
   portfolioLink?: string;
@@ -320,6 +321,7 @@ export interface WorkOrder {
 export interface POSSession {
   id: string;
   staffId: string;
+  staffName?: string;
   startTime: string;
   endTime?: string;
   startCash: number;
@@ -615,3 +617,49 @@ export interface SocialAnalytics {
   totalViews: number; // Or Impressions for Twitter
   engagementRate: number;
 }
+// --- BLOG TYPES ---
+export type BlogStatus = 'Draft' | 'Review' | 'Published' | 'Archived';
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string; // HTML or Markdown
+  excerpt: string;
+  image: string;
+  author: string;
+  category: string;
+  tags: string[];
+  status: BlogStatus;
+  
+  // SEO
+  seoTitle?: string;
+  seoDescription?: string;
+  
+  publishDate?: string;
+  date?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- USER ROLE & PERMISSION TYPES ---
+
+export type Permission = 'View' | 'Edit' | 'Create' | 'Delete' | 'Approve' | 'Export';
+
+export interface RolePermissions {
+  [module: string]: Permission[]; // e.g. "Orders": ["View", "Edit"]
+}
+
+export interface SystemRole {
+  id: string;
+  name: string; // e.g. "Manager", "Technician"
+  description: string;
+  permissions: RolePermissions;
+  isSystem: boolean; // Cannot be deleted
+}
+
+export type StaffStatus = 'Active' | 'Inactive' | 'Pending Approval' | 'Suspended';
+
+// Note: StaffMember interface already exists but we might need to extend it 
+// with specific permission overrides or linked SystemRole ID if we were using a relational DB.
+// For now, we use the `role` string in StaffMember to map to SystemRole.name.

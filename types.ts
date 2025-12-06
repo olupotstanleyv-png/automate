@@ -1,6 +1,7 @@
 
 
 
+
 export interface Product {
   id: string;
   name: string;
@@ -663,3 +664,12 @@ export type StaffStatus = 'Active' | 'Inactive' | 'Pending Approval' | 'Suspende
 // Note: StaffMember interface already exists but we might need to extend it 
 // with specific permission overrides or linked SystemRole ID if we were using a relational DB.
 // For now, we use the `role` string in StaffMember to map to SystemRole.name.
+
+// --- GALLERY TYPES ---
+export interface GalleryItem {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  description: string;
+}

@@ -1,11 +1,5 @@
-
-
-
 import React, { useState } from 'react';
 import { 
-  PRODUCTS, 
-  MOCK_CUSTOMERS, 
-  MOCK_STAFF, 
   MOCK_FLEET, 
   MOCK_BOOKINGS, 
   MOCK_TRANSACTIONS, 
@@ -15,7 +9,9 @@ import {
   MOCK_ACTIVITY_LOGS,
   MOCK_SERVICE_PACKAGES,
   MOCK_BLOG_POSTS,
-  DEFAULT_ROLES
+  DEFAULT_ROLES,
+  MOCK_STAFF,
+  MOCK_CUSTOMERS
 } from './data';
 import { 
   Product, 
@@ -35,13 +31,15 @@ import {
   POSWorkflowStage,
   POSItem,
   PaymentMethodType,
+  PaymentStatus,
   BlogPost,
   BlogStatus,
   SystemRole,
   StaffStatus,
   Permission
 } from './types';
-import { useOrders, useSettings, useContact, useTeam } from './store';
+import { useOrders, useSettings, useContact, useTeam, useProducts, useFleet, useStaff, useCustomerNotification } from './store';
+import Receipt from './Receipt';
 
 // --- TYPES ---
 type AdminTab = 'dashboard' | 'pos' | 'products' | 'vehicles' | 'bookings' | 'maintenance' | 'compliance' | 'orders' | 'customers' | 'staff' | 'financials' | 'notifications' | 'reports' | 'audit' | 'settings' | 'support' | 'team' | 'blog';
@@ -67,6 +65,20 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ tab, icon, label, isActive, o
     {label}
   </button>
 );
+
+// --- HELPER: FILE UPLOAD ---
+const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, onSuccess: (base64: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+                onSuccess(reader.result);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+};
 
 // --- VIEW COMPONENTS ---
 
@@ -101,68 +113,54 @@ const DashboardView = () => {
                 <div className="text-blue-500 text-xs mt-2">Utilization Rate</div>
             </div>
         </div>
-
-        {/* Recent Activity */}
-        <div className="grid lg:grid-cols-2 gap-8">
-            <div className="bg-brand-surface rounded-xl border border-white/5 overflow-hidden">
-                <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                    <h3 className="font-bold text-white">Recent Orders</h3>
-                    <button className="text-xs text-brand-gold hover:underline">View All</button>
-                </div>
-                <div className="p-0">
-                    {orders.slice(0, 5).map(order => (
-                        <div key={order.id} className="p-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors flex justify-between items-center">
-                            <div>
-                                <div className="font-bold text-white">{order.customerName}</div>
-                                <div className="text-xs text-gray-500">{order.items.length} items • ${order.total}</div>
-                            </div>
-                            <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                order.status === 'Delivered' ? 'bg-green-500/10 text-green-500' : 
-                                order.status === 'Cancelled' ? 'bg-red-500/10 text-red-500' : 
-                                'bg-blue-500/10 text-blue-500'
-                            }`}>
-                                {order.status}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="bg-brand-surface rounded-xl border border-white/5 overflow-hidden">
-                <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                     <h3 className="font-bold text-white">System Alerts</h3>
-                     <button className="text-xs text-gray-500 hover:text-white">Clear All</button>
-                </div>
-                <div className="p-4 space-y-3">
-                     <div className="bg-red-500/10 border border-red-500/20 p-3 rounded flex gap-3 items-start">
-                         <i className="fa-solid fa-triangle-exclamation text-red-500 mt-1"></i>
-                         <div>
-                             <div className="text-sm font-bold text-red-200">Compliance Warning</div>
-                             <div className="text-xs text-red-300">Porsche Taycan (v2) insurance expires in 5 days.</div>
-                         </div>
-                     </div>
-                     <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded flex gap-3 items-start">
-                         <i className="fa-solid fa-clock text-yellow-500 mt-1"></i>
-                         <div>
-                             <div className="text-sm font-bold text-yellow-200">Pending Approvals</div>
-                             <div className="text-xs text-yellow-300">3 new bookings require manager approval.</div>
-                         </div>
-                     </div>
-                </div>
-            </div>
-        </div>
     </div>
   );
 };
 
-const ProductsView = () => (
+const ProductsView = () => {
+    const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+
+    const handleEdit = (product: Product) => {
+        setCurrentProduct(product);
+        setIsEditing(true);
+    };
+
+    const handleNew = () => {
+        setCurrentProduct({
+            id: `PROD-${Date.now()}`,
+            name: '',
+            price: 0,
+            category: 'parts',
+            image: 'https://via.placeholder.com/400',
+            description: '',
+            rating: 5.0
+        });
+        setIsEditing(true);
+    };
+
+    const handleSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        if(!currentProduct) return;
+        
+        if (products.some(p => p.id === currentProduct.id)) {
+            updateProduct(currentProduct.id, currentProduct);
+        } else {
+            addProduct(currentProduct);
+        }
+        setIsEditing(false);
+        setCurrentProduct(null);
+    };
+
+    return (
     <div className="space-y-6 animate-fade-in">
        <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-white">Product Inventory</h2>
             <p className="text-gray-400 text-sm">Manage store items, pricing, and stock.</p>
           </div>
-          <button className="bg-brand-gold text-black font-bold py-2 px-4 rounded hover:bg-brand-gold-light flex items-center gap-2">
+          <button onClick={handleNew} className="bg-brand-gold text-black font-bold py-2 px-4 rounded hover:bg-brand-gold-light flex items-center gap-2">
              <i className="fa-solid fa-plus"></i> Add Product
           </button>
        </div>
@@ -178,7 +176,7 @@ const ProductsView = () => (
                 </tr>
              </thead>
              <tbody className="divide-y divide-white/5">
-                {PRODUCTS.map(p => (
+                {products.map(p => (
                    <tr key={p.id} className="hover:bg-white/5 transition-colors">
                       <td className="p-4 flex items-center gap-4">
                          <div className="w-10 h-10 rounded bg-brand-dark overflow-hidden shrink-0">
@@ -200,18 +198,76 @@ const ProductsView = () => (
                          </div>
                       </td>
                       <td className="p-4 text-right">
-                         <button className="text-gray-400 hover:text-white mr-3 transition-colors"><i className="fa-solid fa-pen"></i></button>
-                         <button className="text-gray-400 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash"></i></button>
+                         <button onClick={() => handleEdit(p)} className="text-gray-400 hover:text-white mr-3 transition-colors"><i className="fa-solid fa-pen"></i></button>
+                         <button onClick={() => deleteProduct(p.id)} className="text-gray-400 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash"></i></button>
                       </td>
                    </tr>
                 ))}
              </tbody>
           </table>
        </div>
-    </div>
-);
 
-const VehiclesView = () => (
+       {/* Product Edit Modal */}
+       {isEditing && currentProduct && (
+           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+               <div className="bg-brand-surface w-full max-w-2xl rounded-xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
+                   <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                       <i className="fa-solid fa-box text-brand-gold"></i>
+                       {products.some(p => p.id === currentProduct.id) ? 'Edit Product' : 'New Product'}
+                   </h3>
+                   <form onSubmit={handleSave} className="space-y-4">
+                       <div className="grid grid-cols-2 gap-4">
+                           <div>
+                               <label className="block text-xs text-gray-500 uppercase mb-1">Product Name</label>
+                               <input type="text" required value={currentProduct.name} onChange={e => setCurrentProduct({...currentProduct, name: e.target.value})} className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" />
+                           </div>
+                           <div>
+                               <label className="block text-xs text-gray-500 uppercase mb-1">Price</label>
+                               <input type="number" required value={currentProduct.price} onChange={e => setCurrentProduct({...currentProduct, price: parseFloat(e.target.value)})} className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" />
+                           </div>
+                       </div>
+                       <div>
+                           <label className="block text-xs text-gray-500 uppercase mb-1">Category</label>
+                           <select value={currentProduct.category} onChange={e => setCurrentProduct({...currentProduct, category: e.target.value as any})} className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none">
+                               <option value="parts">Parts</option>
+                               <option value="automation">Automation</option>
+                               <option value="accessories">Accessories</option>
+                               <option value="cars">Cars</option>
+                           </select>
+                       </div>
+                       <div>
+                           <label className="block text-xs text-gray-500 uppercase mb-1">Product Image</label>
+                           <div className="flex items-center gap-4">
+                               <img src={currentProduct.image} alt="Preview" className="w-16 h-16 object-cover rounded bg-brand-dark" />
+                               <div className="flex-1">
+                                   <input 
+                                       type="file" 
+                                       accept="image/*"
+                                       onChange={(e) => handleImageUpload(e, (base64) => setCurrentProduct({...currentProduct, image: base64}))}
+                                       className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                                   />
+                               </div>
+                           </div>
+                       </div>
+                       <div>
+                           <label className="block text-xs text-gray-500 uppercase mb-1">Description</label>
+                           <textarea rows={3} value={currentProduct.description} onChange={e => setCurrentProduct({...currentProduct, description: e.target.value})} className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" />
+                       </div>
+                       <div className="flex justify-end gap-2 pt-4">
+                           <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+                           <button type="submit" className="px-6 py-2 bg-brand-gold text-black font-bold rounded hover:bg-brand-gold-light">Save Product</button>
+                       </div>
+                   </form>
+               </div>
+           </div>
+       )}
+    </div>
+    );
+};
+
+const VehiclesView = () => {
+    const { fleet } = useFleet();
+    return (
     <div className="space-y-6 animate-fade-in">
        <div className="flex justify-between items-center">
           <div>
@@ -235,7 +291,7 @@ const VehiclesView = () => (
                 </tr>
              </thead>
              <tbody className="divide-y divide-white/5">
-                {MOCK_FLEET.map(v => (
+                {fleet.map(v => (
                    <tr key={v.id} className="hover:bg-white/5 transition-colors">
                       <td className="p-4 flex items-center gap-4">
                          <div className="w-12 h-8 rounded bg-brand-dark overflow-hidden shrink-0">
@@ -268,12 +324,15 @@ const VehiclesView = () => (
           </table>
        </div>
     </div>
-);
+    );
+};
 
 const OrdersView = () => {
     const { orders, updateOrder, deleteOrder } = useOrders();
+    const { addNotification } = useCustomerNotification();
     const [filter, setFilter] = useState<string>('All');
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
     const filteredOrders = orders.filter(o => {
         const matchesFilter = filter === 'All' || o.status === filter;
@@ -285,6 +344,24 @@ const OrdersView = () => {
     const handleStatusChange = (id: string, newStatus: any) => {
         if (window.confirm(`Change order status to ${newStatus}?`)) {
             updateOrder(id, { status: newStatus });
+            // Trigger Notification
+            addNotification({
+                title: 'Order Updated',
+                message: `Your order #${id} has been marked as ${newStatus}.`,
+                type: 'info'
+            });
+        }
+    };
+
+    const handlePaymentStatusChange = (id: string, newPaymentStatus: PaymentStatus) => {
+        if (window.confirm(`Mark payment as ${newPaymentStatus}?`)) {
+            updateOrder(id, { paymentStatus: newPaymentStatus });
+            // Trigger Notification
+            addNotification({
+                title: 'Payment Update',
+                message: `Payment for order #${id} has been marked as ${newPaymentStatus}.`,
+                type: 'success'
+            });
         }
     };
 
@@ -377,25 +454,48 @@ const OrdersView = () => {
                               <td className="p-4 text-xs">{new Date(o.createdAt).toLocaleDateString()}</td>
                               <td className="p-4 text-right">
                                  <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                                     {/* Action Buttons */}
+                                     <button 
+                                        onClick={() => setViewingOrder(o)}
+                                        className="w-8 h-8 rounded bg-gray-500/10 text-gray-400 hover:bg-gray-500 hover:text-white transition-colors flex items-center justify-center"
+                                        title="View Invoice"
+                                     >
+                                        <i className="fa-solid fa-file-invoice"></i>
+                                     </button>
+
+                                     {/* 1. Payment Approval (If Pending) */}
+                                     {o.paymentStatus === 'Pending' && o.status !== 'Cancelled' && (
+                                         <button 
+                                            onClick={() => handlePaymentStatusChange(o.id, 'Paid')}
+                                            className="w-8 h-8 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-colors flex items-center justify-center"
+                                            title="Approve Payment"
+                                         >
+                                             <i className="fa-solid fa-dollar-sign"></i>
+                                         </button>
+                                     )}
+
+                                     {/* 2. Order Confirmation (If Placed) */}
                                      {o.status === 'Placed' && (
                                          <button 
                                             onClick={() => handleStatusChange(o.id, 'Confirmed')}
-                                            className="w-8 h-8 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-colors flex items-center justify-center"
-                                            title="Approve Order"
+                                            className="w-8 h-8 rounded bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors flex items-center justify-center"
+                                            title="Confirm Order"
                                          >
                                              <i className="fa-solid fa-check"></i>
                                          </button>
                                      )}
-                                     {(o.status === 'Confirmed' || o.status === 'Placed') && (
+
+                                     {/* 3. Mark Shipped (If Confirmed) */}
+                                     {(o.status === 'Confirmed') && (
                                          <button 
                                             onClick={() => handleStatusChange(o.id, 'Shipped')}
-                                            className="w-8 h-8 rounded bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors flex items-center justify-center"
+                                            className="w-8 h-8 rounded bg-purple-500/10 text-purple-500 hover:bg-purple-500 hover:text-white transition-colors flex items-center justify-center"
                                             title="Mark Shipped"
                                          >
                                              <i className="fa-solid fa-truck-fast"></i>
                                          </button>
                                      )}
+
+                                     {/* 4. Cancel/Delete */}
                                      {o.status !== 'Cancelled' && o.status !== 'Delivered' && (
                                          <button 
                                             onClick={() => handleStatusChange(o.id, 'Cancelled')}
@@ -426,6 +526,11 @@ const OrdersView = () => {
                   </table>
                 </div>
             </div>
+
+            {/* Invoice Modal for Admin */}
+            {viewingOrder && (
+                <Receipt order={viewingOrder} onClose={() => setViewingOrder(null)} />
+            )}
         </div>
     );
 };
@@ -505,7 +610,9 @@ const CustomersView = () => (
     </div>
 );
 
-const StaffView = () => (
+const StaffView = () => {
+    const { staff, updateStaff } = useStaff();
+    return (
     <div className="space-y-6 animate-fade-in">
         <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-white">Staff Directory</h2>
@@ -523,7 +630,7 @@ const StaffView = () => (
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                    {MOCK_STAFF.map(s => (
+                    {staff.map(s => (
                         <tr key={s.id} className="hover:bg-white/5 transition-colors">
                             <td className="p-4">
                                 <div className="text-white font-bold">{s.name}</div>
@@ -543,7 +650,8 @@ const StaffView = () => (
             </table>
         </div>
     </div>
-);
+    );
+};
 
 const FinancialsView = () => (
     <div className="space-y-6 animate-fade-in">
@@ -681,6 +789,7 @@ const SupportView = () => {
 };
 
 const POSView = () => {
+    const { fleet } = useFleet();
     const [currentStage, setCurrentStage] = useState<POSWorkflowStage>('INTAKE');
     const [scannedCode, setScannedCode] = useState('');
     const [scanLoading, setScanLoading] = useState(false);
@@ -693,7 +802,7 @@ const POSView = () => {
         setScanLoading(true);
         setTimeout(() => {
             // Simulate finding a car from fleet
-            const foundCar = MOCK_FLEET.find(c => c.vin.includes(scannedCode) || c.id === scannedCode) || MOCK_FLEET[0];
+            const foundCar = fleet.find(c => c.vin.includes(scannedCode) || c.id === scannedCode) || fleet[0];
             const newOrder: WorkOrder = {
                 id: `WO-${Math.floor(Math.random() * 10000)}`,
                 vehicleId: foundCar.id,
@@ -1011,7 +1120,9 @@ const POSView = () => {
     );
 };
 
-const ComplianceView = () => (
+const ComplianceView = () => {
+    const { fleet } = useFleet();
+    return (
       <div className="space-y-6 animate-fade-in">
           <h2 className="text-2xl font-bold text-white">Compliance & Documents</h2>
           <div className="bg-brand-surface rounded-xl border border-white/5 overflow-hidden shadow-lg">
@@ -1027,7 +1138,7 @@ const ComplianceView = () => (
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                      {MOCK_FLEET.flatMap(v => v.compliance?.map(c => ({...c, vehicle: `${v.make} ${v.model}`})))
+                      {fleet.flatMap(v => v.compliance?.map(c => ({...c, vehicle: `${v.make} ${v.model}`})))
                           .filter(c => c)
                           .map((doc: any, idx) => {
                                const expiry = new Date(doc.expiryDate);
@@ -1054,7 +1165,8 @@ const ComplianceView = () => (
                </table>
           </div>
       </div>
-);
+    );
+};
 
 const NotificationsView = () => (
       <div className="space-y-6 animate-fade-in">
@@ -1357,7 +1469,7 @@ const TeamView = () => {
           role: '',
           department: 'Management',
           bio: '',
-          image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1000&auto=format&fit=crop',
+          image: 'https://via.placeholder.com/400',
           status: 'Active',
           socialLinks: {},
           certifications: [],
@@ -1427,11 +1539,6 @@ const TeamView = () => {
                 </div>
              </div>
            ))}
-           {teamMembers.length === 0 && (
-               <div className="text-center py-12 text-gray-500 bg-brand-surface rounded-lg border border-dashed border-white/10">
-                   No team members found. Add one to get started.
-               </div>
-           )}
         </div>
 
         {/* Edit Modal */}
@@ -1474,6 +1581,19 @@ const TeamView = () => {
                    </div>
                 </div>
                 
+                <div>
+                    <label className="block text-xs text-gray-500 uppercase mb-1">Profile Image</label>
+                    <div className="flex items-center gap-4">
+                        <img src={currentTeamMember.image} alt="Profile" className="w-16 h-16 rounded-full object-cover border border-white/10" />
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, (base64) => setCurrentTeamMember({...currentTeamMember, image: base64}))}
+                            className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                        />
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                      <div>
                          <label className="block text-xs text-gray-500 uppercase mb-1">Years of Experience</label>
@@ -1501,33 +1621,6 @@ const TeamView = () => {
                 <div>
                     <label className="block text-xs text-gray-500 uppercase mb-1">Bio</label>
                     <textarea rows={3} value={currentTeamMember.bio} onChange={e => setCurrentTeamMember({...currentTeamMember, bio: e.target.value})} className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" />
-                </div>
-
-                <div>
-                    <label className="block text-xs text-gray-500 uppercase mb-1">Profile Image URL</label>
-                    <input type="text" value={currentTeamMember.image} onChange={e => setCurrentTeamMember({...currentTeamMember, image: e.target.value})} className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" />
-                </div>
-                
-                <div>
-                    <label className="block text-xs text-gray-500 uppercase mb-1">Certifications (comma separated)</label>
-                    <input 
-                       type="text" 
-                       value={currentTeamMember.certifications?.join(', ') || ''} 
-                       onChange={e => setCurrentTeamMember({...currentTeamMember, certifications: e.target.value.split(',').map(s => s.trim())})} 
-                       className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" 
-                       placeholder="MBA, PMP, ASE Certified"
-                    />
-                </div>
-                
-                <div>
-                    <label className="block text-xs text-gray-500 uppercase mb-1">Specializations (comma separated)</label>
-                    <input 
-                       type="text" 
-                       value={currentTeamMember.specializations?.join(', ') || ''} 
-                       onChange={e => setCurrentTeamMember({...currentTeamMember, specializations: e.target.value.split(',').map(s => s.trim())})} 
-                       className="w-full bg-brand-dark border border-white/10 rounded p-2 text-white focus:border-brand-gold focus:outline-none" 
-                       placeholder="e.g. AI, Customer Success"
-                    />
                 </div>
                 
                 <div className="grid grid-cols-3 gap-4">
@@ -1570,26 +1663,18 @@ const TeamView = () => {
 
 const SettingsView = () => {
     const { settings, updateSettings } = useSettings();
-    const [activeTab, setActiveTab] = useState<'General' | 'Users' | 'Notifications' | 'Social Media' | 'Audit & Logs' | 'Roles & Permissions'>('General');
-    // Local state for staff management simulation since we don't have a specific backend or context for StaffMembers in this scope
-    const [staffList, setStaffList] = useState<StaffMember[]>(MOCK_STAFF);
-    const [auditFilter, setAuditFilter] = useState('All');
-    
-    // Role Management State
+    const { staff, updateStaff } = useStaff();
+    const [activeTab, setActiveTab] = useState<'General' | 'Branding' | 'Users' | 'Notifications' | 'Social Media' | 'Audit & Logs' | 'Roles & Permissions'>('General');
     const [systemRoles, setSystemRoles] = useState<SystemRole[]>(DEFAULT_ROLES);
-    const [editingRole, setEditingRole] = useState<SystemRole | null>(null);
+    const [auditFilter, setAuditFilter] = useState('All');
   
     const handleRoleUpdate = (id: string, newRole: UserRole) => {
-      setStaffList(prev => prev.map(member => 
-          member.id === id ? { ...member, role: newRole } : member
-      ));
+        updateStaff(id, { role: newRole });
     };
 
     const handleStatusUpdate = (id: string, newStatus: StaffStatus) => {
-        setStaffList(prev => prev.map(member => 
-            member.id === id ? { ...member, status: newStatus as any } : member
-        ));
-      };
+        updateStaff(id, { status: newStatus as any });
+    };
 
     const handleToggleSocial = (id: string) => {
         const updatedAccounts = settings.socialAccounts.map(acc => {
@@ -1639,7 +1724,7 @@ const SettingsView = () => {
          </div>
          
          <div className="flex gap-2 border-b border-white/10 pb-1 overflow-x-auto">
-            {['General', 'Users', 'Roles & Permissions', 'Notifications', 'Social Media', 'Audit & Logs'].map(tab => (
+            {['General', 'Branding', 'Users', 'Roles & Permissions', 'Notifications', 'Social Media', 'Audit & Logs'].map(tab => (
                 <button 
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
@@ -1680,6 +1765,66 @@ const SettingsView = () => {
                  </div>
              </div>
          )}
+
+         {activeTab === 'Branding' && (
+             <div className="bg-brand-surface p-8 rounded-xl border border-white/5 space-y-8">
+                 <h3 className="text-white font-bold text-lg border-l-4 border-brand-gold pl-3">Appearance & Media</h3>
+                 
+                 <div className="space-y-6">
+                     {/* Logo Upload */}
+                     <div className="flex items-start gap-6 border-b border-white/5 pb-6">
+                         <div className="w-32 h-32 bg-brand-dark rounded-lg flex items-center justify-center border border-white/10 overflow-hidden shrink-0">
+                             {settings.logoUrl ? (
+                                 <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
+                             ) : (
+                                 <i className="fa-solid fa-image text-3xl text-gray-600"></i>
+                             )}
+                         </div>
+                         <div className="flex-1">
+                             <h4 className="text-white font-bold mb-1">Store Logo</h4>
+                             <p className="text-sm text-gray-400 mb-4">Recommended size: 512x512px. Transparent PNG preferred.</p>
+                             <div className="relative inline-block">
+                                 <button className="bg-brand-gold text-black font-bold py-2 px-4 rounded text-sm hover:bg-brand-gold-light">
+                                     <i className="fa-solid fa-upload mr-2"></i> Upload Logo
+                                 </button>
+                                 <input 
+                                     type="file" 
+                                     accept="image/*"
+                                     onChange={(e) => handleImageUpload(e, (base64) => updateSettings({ logoUrl: base64 }))}
+                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                 />
+                             </div>
+                         </div>
+                     </div>
+
+                     {/* Hero Background Upload */}
+                     <div className="flex items-start gap-6">
+                         <div className="w-64 h-32 bg-brand-dark rounded-lg flex items-center justify-center border border-white/10 overflow-hidden shrink-0">
+                             {settings.heroImageUrl ? (
+                                 <img src={settings.heroImageUrl} alt="Hero" className="w-full h-full object-cover" />
+                             ) : (
+                                 <i className="fa-solid fa-image text-3xl text-gray-600"></i>
+                             )}
+                         </div>
+                         <div className="flex-1">
+                             <h4 className="text-white font-bold mb-1">Homepage Background</h4>
+                             <p className="text-sm text-gray-400 mb-4">High resolution image for the main hero section. 1920x1080px recommended.</p>
+                             <div className="relative inline-block">
+                                 <button className="bg-white/10 text-white font-bold py-2 px-4 rounded text-sm hover:bg-white/20">
+                                     <i className="fa-solid fa-upload mr-2"></i> Upload Background
+                                 </button>
+                                 <input 
+                                     type="file" 
+                                     accept="image/*"
+                                     onChange={(e) => handleImageUpload(e, (base64) => updateSettings({ heroImageUrl: base64 }))}
+                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                 />
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         )}
   
          {activeTab === 'Users' && (
              <div className="bg-brand-surface p-8 rounded-xl border border-white/5">
@@ -1705,7 +1850,7 @@ const SettingsView = () => {
                              </tr>
                          </thead>
                          <tbody className="divide-y divide-white/5 bg-brand-dark/20">
-                             {staffList.map(member => (
+                             {staff.map(member => (
                                  <tr key={member.id} className="hover:bg-white/5 transition-colors">
                                      <td className="p-4 flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-brand-dark flex items-center justify-center text-xs font-bold text-brand-gold border border-white/10">
@@ -1917,30 +2062,27 @@ const SettingsView = () => {
             <div className="bg-brand-surface p-8 rounded-xl border border-white/5">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-white font-bold text-lg border-l-4 border-brand-gold pl-3">System Activity Logs</h3>
-                    <button className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors">
-                        <i className="fa-solid fa-download mr-1"></i> Export Logs
-                    </button>
-                </div>
-
-                <div className="flex gap-2 mb-6">
-                    {['All', 'Admin', 'Bookings', 'System', 'Security'].map(filter => (
-                        <button
-                            key={filter}
-                            onClick={() => setAuditFilter(filter)}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                                auditFilter === filter 
-                                ? 'bg-brand-gold text-black border-brand-gold' 
-                                : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
-                            }`}
+                    <div className="flex gap-3">
+                        <select 
+                            value={auditFilter} 
+                            onChange={e => setAuditFilter(e.target.value)}
+                            className="bg-brand-dark border border-white/10 rounded px-3 py-1.5 text-xs text-white focus:border-brand-gold outline-none"
                         >
-                            {filter} Actions
+                            <option value="All">All Logs</option>
+                            <option value="Security">Security</option>
+                            <option value="Bookings">Bookings</option>
+                            <option value="System">System</option>
+                            <option value="Admin">Admin Actions</option>
+                        </select>
+                        <button className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors">
+                            <i className="fa-solid fa-download mr-1"></i> Export Logs
                         </button>
-                    ))}
+                    </div>
                 </div>
-
+                
                 <div className="overflow-x-auto rounded-lg border border-white/5">
                     <table className="w-full text-left text-sm text-gray-400">
-                        <thead className="text-xs uppercase bg-brand-dark text-gray-500 border-b border-white/5">
+                        <thead className="bg-brand-dark text-xs uppercase font-bold text-gray-500">
                             <tr>
                                 <th className="p-4">Timestamp</th>
                                 <th className="p-4">User</th>
@@ -1955,19 +2097,20 @@ const SettingsView = () => {
                                     <td className="p-4 font-mono text-xs whitespace-nowrap">{log.timestamp}</td>
                                     <td className="p-4">
                                         <div className="font-bold text-white text-xs">{log.userName}</div>
-                                        <div className="text-[10px] uppercase text-gray-500">{log.role}</div>
+                                        <div className="text-[10px] text-gray-500">{log.role}</div>
                                     </td>
                                     <td className="p-4">
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                            log.action.includes('Created') || log.action.includes('Added') ? 'text-green-500 bg-green-500/10' :
-                                            log.action.includes('Deleted') || log.action.includes('Removed') ? 'text-red-500 bg-red-500/10' :
-                                            'text-blue-500 bg-blue-500/10'
+                                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                                            log.action.includes('Delete') ? 'bg-red-500/10 text-red-500' :
+                                            log.action.includes('Create') || log.action.includes('Add') ? 'bg-green-500/10 text-green-500' :
+                                            log.action.includes('Update') ? 'bg-blue-500/10 text-blue-500' :
+                                            'bg-gray-500/10 text-gray-400'
                                         }`}>
                                             {log.action}
                                         </span>
                                     </td>
                                     <td className="p-4 text-xs font-bold text-gray-300">{log.module}</td>
-                                    <td className="p-4 text-xs max-w-xs truncate" title={log.details}>{log.details}</td>
+                                    <td className="p-4 text-xs max-w-xs truncate">{log.details}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -2009,8 +2152,8 @@ export default function Admin() {
       case 'financials': return <FinancialsView />;
       case 'maintenance': return <MaintenanceView />;
       case 'support': return <SupportView />;
-      case 'compliance': return <ComplianceView />;
       case 'pos': return <POSView />;
+      case 'compliance': return <ComplianceView />;
       case 'notifications': return <NotificationsView />;
       case 'reports': return <ReportsView />;
       case 'blog': return <BlogView />;

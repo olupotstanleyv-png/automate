@@ -15,7 +15,7 @@ import FAQ from './FAQ';
 import Team from './Team';
 import Blog from './Blog';
 import { PageView, Order } from './types';
-import { CartProvider, useCart, WishlistProvider, OrderProvider, SettingsProvider, ContactProvider, ServiceBookingProvider, useSettings, TeamProvider } from './store';
+import { CartProvider, useCart, WishlistProvider, OrderProvider, SettingsProvider, ContactProvider, ServiceBookingProvider, useSettings, TeamProvider, CustomerNotificationProvider, FleetProvider, ProductProvider, StaffProvider } from './store';
 
 // Cart Component inline for simplicity as it's small or can be expanded
 const CartPage = ({ setPage }: { setPage: (p: PageView) => void }) => {
@@ -179,7 +179,15 @@ export default function App() {
             <ContactProvider>
               <ServiceBookingProvider>
                 <TeamProvider>
-                  <MainContent />
+                  <CustomerNotificationProvider>
+                    <FleetProvider>
+                      <ProductProvider>
+                        <StaffProvider>
+                          <MainContent />
+                        </StaffProvider>
+                      </ProductProvider>
+                    </FleetProvider>
+                  </CustomerNotificationProvider>
                 </TeamProvider>
               </ServiceBookingProvider>
             </ContactProvider>

@@ -1,5 +1,4 @@
-
-import { Product, Vehicle, Customer, Booking, ServiceRecord, StaffMember, ActivityLog, Transaction, NotificationLog, AutomationRule, Order, POSSession, StaffTask, SupportTicket, Testimonial, Promotion, Feature, ServiceBooking, ServiceType, Milestone, AboutTeamMember, Award, FAQItem, TikTokPost, SocialAnalytics, TwitterTweet, PublicTeamMember, ServicePackage, BlogPost, SystemRole } from './types';
+import { Product, Vehicle, Customer, Booking, ServiceRecord, StaffMember, ActivityLog, Transaction, NotificationLog, AutomationRule, Order, POSSession, StaffTask, SupportTicket, Testimonial, Promotion, Feature, ServiceBooking, ServiceType, Milestone, AboutTeamMember, Award, FAQItem, TikTokPost, SocialAnalytics, TwitterTweet, PublicTeamMember, ServicePackage, BlogPost, SystemRole, GalleryItem } from './types';
 
 export const PRODUCTS: Product[] = [
   {
@@ -493,4 +492,15 @@ export const ABOUT_TEAM: AboutTeamMember[] = [
 export const ABOUT_AWARDS: Award[] = [
     { id: 'a1', title: 'Best Auto Tech Startup', issuer: 'TechCrunch', year: '2022', icon: 'fa-trophy' },
     { id: 'a2', title: 'Innovation Award', issuer: 'CES', year: '2023', icon: 'fa-lightbulb' }
+];
+
+export const MOCK_GALLERY_IMAGES: GalleryItem[] = [
+  { id: 'g1', title: 'Tesla Model S Custom', category: 'Showroom', image: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=2070&auto=format&fit=crop', description: 'Matte black wrap with custom rims.' },
+  { id: 'g2', title: 'Engine Diagnostic', category: 'Workshop', image: 'https://images.unsplash.com/photo-1486262715619-01b80258e0c5?q=80&w=2070&auto=format&fit=crop', description: 'Advanced AI diagnostic session.' },
+  { id: 'g3', title: 'Classic Mustang Restoration', category: 'Restorations', image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop', description: 'Full body restoration process.' },
+  { id: 'g4', title: 'Car Meet 2023', category: 'Events', image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2070&auto=format&fit=crop', description: 'Annual gathering of auto enthusiasts.' },
+  { id: 'g5', title: 'Neon Night Drive', category: 'Events', image: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop', description: 'Night cruise event.' },
+  { id: 'g6', title: 'Porsche 911 Detail', category: 'Showroom', image: 'https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop', description: 'Ceramic coating application.' },
+  { id: 'g7', title: 'Suspension Upgrade', category: 'Workshop', image: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?q=80&w=2070&auto=format&fit=crop', description: 'Installing air suspension.' },
+  { id: 'g8', title: 'Vintage Interior', category: 'Restorations', image: 'https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?q=80&w=2069&auto=format&fit=crop', description: 'Hand-stitched leather upholstery.' },
 ];

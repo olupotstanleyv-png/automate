@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { CartItem, Product, Order, SiteSettings, SupportTicket, ServiceBooking, PublicTeamMember } from './types';
-import { MOCK_ORDERS, MOCK_TICKETS, MOCK_SERVICE_BOOKINGS, MOCK_PUBLIC_TEAM } from './data';
+import { CartItem, Product, Order, SiteSettings, SupportTicket, ServiceBooking, PublicTeamMember, Vehicle, StaffMember } from './types';
+import { MOCK_ORDERS, MOCK_TICKETS, MOCK_SERVICE_BOOKINGS, MOCK_PUBLIC_TEAM, PRODUCTS, MOCK_FLEET, MOCK_STAFF } from './data';
 
 // --- Cart Context ---
 interface CartContextType {
@@ -293,4 +293,182 @@ export const useServiceBooking = () => {
     const context = useContext(ServiceBookingContext);
     if (!context) throw new Error('useServiceBooking must be used within a ServiceBookingProvider');
     return context;
+};
+
+// --- Product Context ---
+interface ProductContextType {
+    products: Product[];
+    addProduct: (product: Product) => void;
+    updateProduct: (id: string, updates: Partial<Product>) => void;
+    deleteProduct: (id: string) => void;
+}
+
+const ProductContext = createContext<ProductContextType | undefined>(undefined);
+
+export const ProductProvider = ({ children }: { children?: ReactNode }) => {
+    const [products, setProducts] = useState<Product[]>(PRODUCTS);
+
+    const addProduct = (product: Product) => {
+        setProducts(prev => [...prev, product]);
+    };
+
+    const updateProduct = (id: string, updates: Partial<Product>) => {
+        setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    };
+
+    const deleteProduct = (id: string) => {
+        setProducts(prev => prev.filter(p => p.id !== id));
+    };
+
+    return (
+        <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct }}>
+            {children}
+        </ProductContext.Provider>
+    );
+};
+
+export const useProducts = () => {
+    const context = useContext(ProductContext);
+    if (!context) throw new Error('useProducts must be used within a ProductProvider');
+    return context;
+};
+
+// --- Fleet Context ---
+interface FleetContextType {
+    fleet: Vehicle[];
+    addVehicle: (vehicle: Vehicle) => void;
+    updateVehicle: (id: string, updates: Partial<Vehicle>) => void;
+    deleteVehicle: (id: string) => void;
+}
+
+const FleetContext = createContext<FleetContextType | undefined>(undefined);
+
+export const FleetProvider = ({ children }: { children?: ReactNode }) => {
+    const [fleet, setFleet] = useState<Vehicle[]>(MOCK_FLEET);
+
+    const addVehicle = (vehicle: Vehicle) => {
+        setFleet(prev => [...prev, vehicle]);
+    };
+
+    const updateVehicle = (id: string, updates: Partial<Vehicle>) => {
+        setFleet(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
+    };
+
+    const deleteVehicle = (id: string) => {
+        setFleet(prev => prev.filter(v => v.id !== id));
+    };
+
+    return (
+        <FleetContext.Provider value={{ fleet, addVehicle, updateVehicle, deleteVehicle }}>
+            {children}
+        </FleetContext.Provider>
+    );
+};
+
+export const useFleet = () => {
+    const context = useContext(FleetContext);
+    if (!context) throw new Error('useFleet must be used within a FleetProvider');
+    return context;
+};
+
+// --- Staff Context ---
+interface StaffContextType {
+    staff: StaffMember[];
+    addStaff: (member: StaffMember) => void;
+    updateStaff: (id: string, updates: Partial<StaffMember>) => void;
+    deleteStaff: (id: string) => void;
+}
+
+const StaffContext = createContext<StaffContextType | undefined>(undefined);
+
+export const StaffProvider = ({ children }: { children?: ReactNode }) => {
+    const [staff, setStaff] = useState<StaffMember[]>(MOCK_STAFF);
+
+    const addStaff = (member: StaffMember) => {
+        setStaff(prev => [...prev, member]);
+    };
+
+    const updateStaff = (id: string, updates: Partial<StaffMember>) => {
+        setStaff(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    };
+
+    const deleteStaff = (id: string) => {
+        setStaff(prev => prev.filter(s => s.id !== id));
+    };
+
+    return (
+        <StaffContext.Provider value={{ staff, addStaff, updateStaff, deleteStaff }}>
+            {children}
+        </StaffContext.Provider>
+    );
+};
+
+export const useStaff = () => {
+    const context = useContext(StaffContext);
+    if (!context) throw new Error('useStaff must be used within a StaffProvider');
+    return context;
+};
+
+// --- Customer Notification Context ---
+interface NotificationData {
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+}
+
+interface CustomerNotificationContextType {
+  notifications: NotificationData[];
+  addNotification: (notification: NotificationData) => void;
+}
+
+const CustomerNotificationContext = createContext<CustomerNotificationContextType | undefined>(undefined);
+
+export const CustomerNotificationProvider = ({ children }: { children?: ReactNode }) => {
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+
+  const addNotification = (notification: NotificationData) => {
+    setNotifications(prev => [...prev, notification]);
+    // Auto dismiss after 3 seconds
+    setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n !== notification));
+    }, 3000);
+  };
+
+  return (
+    <CustomerNotificationContext.Provider value={{ notifications, addNotification }}>
+      {children}
+      {/* Toast Container */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none">
+          {notifications.map((n, i) => (
+              <div key={i} className={`pointer-events-auto min-w-[300px] p-4 rounded-lg shadow-2xl border border-white/10 text-white animate-fade-in-up flex items-start gap-3 backdrop-blur-md ${
+                  n.type === 'success' ? 'bg-green-900/90' : 
+                  n.type === 'error' ? 'bg-red-900/90' : 
+                  n.type === 'warning' ? 'bg-yellow-900/90' : 'bg-brand-surface/90'
+              }`}>
+                  <div className={`mt-0.5 ${
+                      n.type === 'success' ? 'text-green-400' : 
+                      n.type === 'error' ? 'text-red-400' : 
+                      n.type === 'warning' ? 'text-yellow-400' : 'text-blue-400'
+                  }`}>
+                      <i className={`fa-solid ${
+                          n.type === 'success' ? 'fa-circle-check' : 
+                          n.type === 'error' ? 'fa-circle-xmark' : 
+                          n.type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'
+                      }`}></i>
+                  </div>
+                  <div>
+                      <h4 className="font-bold text-sm">{n.title}</h4>
+                      <p className="text-xs text-gray-300 mt-1">{n.message}</p>
+                  </div>
+              </div>
+          ))}
+      </div>
+    </CustomerNotificationContext.Provider>
+  );
+};
+
+export const useCustomerNotification = () => {
+  const context = useContext(CustomerNotificationContext);
+  if (!context) throw new Error('useCustomerNotification must be used within a CustomerNotificationProvider');
+  return context;
 };

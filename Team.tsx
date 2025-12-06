@@ -110,21 +110,44 @@ export default function Team() {
           </div>
         )}
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
-            {departments.map(dept => (
-                <button
-                    key={dept}
-                    onClick={() => setActiveDepartment(dept)}
-                    className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${
-                        activeDepartment === dept 
-                        ? 'bg-brand-gold text-brand-black shadow-lg shadow-brand-gold/20' 
-                        : 'bg-brand-surface text-gray-400 hover:bg-white/10'
-                    }`}
-                >
-                    {dept}
-                </button>
-            ))}
+        {/* Filter UI - Responsive */}
+        <div className="flex flex-col items-center mb-12">
+            
+            {/* Desktop Tabs */}
+            <div className="hidden md:flex flex-wrap justify-center gap-2">
+                {departments.map(dept => (
+                    <button
+                        key={dept}
+                        onClick={() => setActiveDepartment(dept)}
+                        className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${
+                            activeDepartment === dept 
+                            ? 'bg-brand-gold text-brand-black shadow-lg shadow-brand-gold/20' 
+                            : 'bg-brand-surface text-gray-400 hover:bg-white/10'
+                        }`}
+                    >
+                        {dept}
+                    </button>
+                ))}
+            </div>
+
+            {/* Mobile Dropdown */}
+            <div className="md:hidden w-full max-w-xs relative">
+                <label className="block text-xs text-gray-500 uppercase font-bold mb-2 ml-1">Filter by Department</label>
+                <div className="relative">
+                    <select 
+                        value={activeDepartment}
+                        onChange={(e) => setActiveDepartment(e.target.value)}
+                        className="w-full appearance-none bg-brand-surface border border-white/10 text-white py-3 pl-4 pr-10 rounded-lg focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-colors cursor-pointer font-medium"
+                    >
+                        {departments.map(dept => (
+                            <option key={dept} value={dept} className="bg-brand-black text-gray-200">{dept}</option>
+                        ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-brand-gold">
+                        <i className="fa-solid fa-filter"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {/* Team Grid */}

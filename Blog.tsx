@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { PageView } from './types';
 
 interface BlogProps {
@@ -57,11 +57,15 @@ const BLOG_POSTS = [
 const CATEGORIES = ["All", "Technology", "Maintenance", "Performance", "Customization", "Safety"];
 
 export default function Blog({ setPage }: BlogProps) {
-  const [activeCategory, setActiveCategory] = React.useState("All");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredPosts = activeCategory === "All" 
-    ? BLOG_POSTS 
-    : BLOG_POSTS.filter(post => post.category === activeCategory);
+  const filteredPosts = BLOG_POSTS.filter(post => {
+    const matchesCategory = activeCategory === "All" || post.category === activeCategory;
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="animate-fade-in">
@@ -85,52 +89,81 @@ export default function Blog({ setPage }: BlogProps) {
       </section>
 
       <div className="container mx-auto px-4 py-16">
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {CATEGORIES.map(cat => (
-                <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-5 py-2 rounded-full text-sm font-bold transition-all border ${
-                        activeCategory === cat 
-                        ? 'bg-brand-gold text-brand-black border-brand-gold' 
-                        : 'bg-brand-surface text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
-                    }`}
-                >
-                    {cat}
-                </button>
-            ))}
+        {/* Controls: Category Filter & Search */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
+            {/* Category Filter */}
+            <div className="flex flex-wrap justify-center gap-2">
+                {CATEGORIES.map(cat => (
+                    <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-5 py-2 rounded-full text-sm font-bold transition-all border ${
+                            activeCategory === cat 
+                            ? 'bg-brand-gold text-brand-black border-brand-gold shadow-lg shadow-brand-gold/20' 
+                            : 'bg-brand-surface text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
+                        }`}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative w-full md:w-64">
+                <input 
+                    type="text" 
+                    placeholder="Search articles..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-brand-surface border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:border-brand-gold focus:outline-none"
+                />
+                <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+            </div>
         </div>
 
         {/* Blog Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map(post => (
-                <div key={post.id} className="bg-brand-surface rounded-xl overflow-hidden border border-white/5 hover:border-brand-gold/30 transition-all group cursor-pointer hover:-translate-y-2">
-                    <div className="h-56 overflow-hidden relative">
-                        <img 
-                            src={post.image} 
-                            alt={post.title} 
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute top-4 left-4 bg-brand-black/80 backdrop-blur-sm text-brand-gold text-xs font-bold px-3 py-1 rounded border border-brand-gold/20">
-                            {post.category}
+        {filteredPosts.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredPosts.map(post => (
+                    <div key={post.id} className="bg-brand-surface rounded-xl overflow-hidden border border-white/5 hover:border-brand-gold/30 transition-all group cursor-pointer hover:-translate-y-2">
+                        <div className="h-56 overflow-hidden relative">
+                            <img 
+                                src={post.image} 
+                                alt={post.title} 
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                            <div className="absolute top-4 left-4 bg-brand-black/80 backdrop-blur-sm text-brand-gold text-xs font-bold px-3 py-1 rounded border border-brand-gold/20 uppercase tracking-wider">
+                                {post.category}
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                                <span><i className="fa-regular fa-calendar mr-1"></i>{post.date}</span>
+                                <span>•</span>
+                                <span><i className="fa-regular fa-user mr-1"></i>{post.author}</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3 group-hover:text-brand-gold transition-colors line-clamp-2">{post.title}</h3>
+                            <p className="text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed">{post.excerpt}</p>
+                            <button className="text-brand-gold text-sm font-bold hover:underline flex items-center gap-1">
+                                Read Article <i className="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
                         </div>
                     </div>
-                    <div className="p-6">
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                            <span><i className="fa-regular fa-calendar mr-1"></i>{post.date}</span>
-                            <span>•</span>
-                            <span><i className="fa-regular fa-user mr-1"></i>{post.author}</span>
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-3 group-hover:text-brand-gold transition-colors">{post.title}</h3>
-                        <p className="text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed">{post.excerpt}</p>
-                        <button className="text-brand-gold text-sm font-bold hover:underline flex items-center gap-1">
-                            Read Article <i className="fa-solid fa-arrow-right text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            ))}
-        </div>
+                ))}
+            </div>
+        ) : (
+            <div className="text-center py-20 border border-white/5 rounded-xl bg-brand-surface/50">
+                <i className="fa-regular fa-newspaper text-4xl text-gray-600 mb-4"></i>
+                <h3 className="text-xl font-bold text-white mb-2">No articles found</h3>
+                <p className="text-gray-400">Try changing the category or search term.</p>
+                <button 
+                    onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
+                    className="mt-4 text-brand-gold text-sm font-bold hover:underline"
+                >
+                    Clear Filters
+                </button>
+            </div>
+        )}
 
         {/* Newsletter Signup */}
         <div className="mt-20 bg-brand-surface border border-white/10 rounded-2xl p-10 text-center relative overflow-hidden">
